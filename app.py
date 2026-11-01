@@ -26,49 +26,42 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom Styling (Formal Enterprise Theme & Top Navigation System)
+# Custom Styling (Light Theme & Glassmorphic Design System)
 st.markdown("""
 <style>
-    /* Permanently hide Streamlit sidebar and collapse control across ALL views */
-    [data-testid="stSidebar"], 
-    [data-testid="collapsedControl"],
-    section[data-testid="stSidebar"] {
-        display: none !important;
-    }
-
     /* Global Light Theme Canvas */
     .stApp {
-        background-color: #F8FAFC !important;
+        background: radial-gradient(circle at 10% 15%, rgba(238, 242, 255, 0.8) 0%, transparent 45%),
+                    radial-gradient(circle at 90% 85%, rgba(224, 242, 254, 0.7) 0%, transparent 45%),
+                    #F8FAFC !important;
         color: #0F172A !important;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     }
 
-    /* Main Container Width & Formal Spacing */
-    .main .block-container {
-        max-width: 1320px !important;
-        padding-top: 1.25rem !important;
-        padding-bottom: 3rem !important;
-        margin: 0 auto !important;
+    /* Main Title and Subtitle */
+    .main-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0F172A;
+        letter-spacing: -0.025em;
+        margin-bottom: 0.25rem;
     }
-
-    /* Formal Top Navbar Container Card */
-    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type {
-        background: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 10px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-        padding: 0.55rem 1rem !important;
-        margin-bottom: 0.85rem !important;
+    .sub-title {
+        font-size: 0.95rem;
+        color: #64748B;
+        margin-bottom: 1.25rem;
     }
 
     /* Top Taskbar on Landing Page */
     .landing-taskbar {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        padding: 12px 20px;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(226, 232, 240, 0.85);
+        border-radius: 16px;
+        padding: 14px 24px;
+        margin-bottom: 1.75rem;
+        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -76,27 +69,66 @@ st.markdown("""
         gap: 12px;
     }
 
-    /* Formal Enterprise Feature Cards */
+    /* Top Taskbar on Authenticated Pages */
+    .auth-taskbar {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(226, 232, 240, 0.85);
+        border-radius: 16px;
+        padding: 12px 20px;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04);
+    }
+
+    /* Glass Cards */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(226, 232, 240, 0.85);
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.02);
+    }
+
+    /* Feature Cards on Landing Page */
     .feature-card {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        padding: 16px 18px;
-        margin-bottom: 12px;
-        transition: all 0.2s ease;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(226, 232, 240, 0.85);
+        border-radius: 16px;
+        padding: 18px 20px;
+        margin-bottom: 14px;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.03);
     }
     .feature-card:hover {
-        border-color: #CBD5E1;
-        box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 24px -4px rgba(79, 70, 229, 0.12);
+        border-color: rgba(79, 70, 229, 0.35);
     }
+
+    /* Role Badges & Tags */
+    .role-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+    .badge-admin { background-color: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+    .badge-mentor { background-color: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; }
+    .badge-intern { background-color: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
 
     .pill-tag {
         display: inline-block;
-        padding: 2px 8px;
-        border-radius: 6px;
+        padding: 3px 10px;
+        border-radius: 9999px;
         font-size: 0.72rem;
-        font-weight: 500;
+        font-weight: 600;
         background: #F1F5F9;
         color: #475569;
         border: 1px solid #E2E8F0;
@@ -104,113 +136,91 @@ st.markdown("""
         margin-top: 6px;
     }
 
-    /* Universal Buttons - Formal, Crisp & Aligned */
+    /* Universal Buttons Styling */
     .stButton > button {
-        border-radius: 8px !important;
-        font-weight: 500 !important;
-        font-size: 0.875rem !important;
-        padding: 0.42rem 1rem !important;
-        border: 1px solid #CBD5E1 !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        font-size: 0.92rem !important;
+        padding: 0.52rem 1.25rem !important;
+        border: 1px solid #E2E8F0 !important;
         background: #FFFFFF !important;
         color: #1E293B !important;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
-        transition: all 0.15s ease-in-out !important;
-        line-height: 1.35 !important;
-        min-height: 2.25rem !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     .stButton > button:hover {
+        transform: translateY(-2px) !important;
         border-color: #4F46E5 !important;
         color: #4F46E5 !important;
+        box-shadow: 0 6px 16px -2px rgba(79, 70, 229, 0.18) !important;
         background: #F8FAFC !important;
-        box-shadow: 0 2px 5px rgba(79, 70, 229, 0.12) !important;
     }
     .stButton > button:active {
-        transform: scale(0.98) !important;
-        background: #F1F5F9 !important;
-    }
-
-    /* Sign Out Button Specific Style (Discreet, Formal Red Hover) */
-    div[data-testid="stVerticalBlockBorderWrapper"] .stButton > button {
-        border: 1px solid #E2E8F0 !important;
-        color: #475569 !important;
-        font-weight: 500 !important;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"] .stButton > button:hover {
-        border-color: #FCA5A5 !important;
-        color: #DC2626 !important;
-        background: #FEF2F2 !important;
-        box-shadow: 0 1px 3px rgba(220, 38, 38, 0.1) !important;
+        transform: scale(0.97) translateY(0) !important;
+        box-shadow: 0 2px 4px rgba(79, 70, 229, 0.1) !important;
     }
 
     /* Primary Action Submit Buttons */
     .stFormSubmitButton > button {
-        border-radius: 8px !important;
+        border-radius: 12px !important;
         font-weight: 600 !important;
-        font-size: 0.88rem !important;
-        padding: 0.5rem 1.25rem !important;
-        background: #4F46E5 !important;
+        font-size: 0.95rem !important;
+        padding: 0.65rem 1.5rem !important;
+        background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%) !important;
         color: #FFFFFF !important;
-        border: 1px solid #4338CA !important;
-        box-shadow: 0 1px 3px rgba(79, 70, 229, 0.25) !important;
-        transition: all 0.15s ease-in-out !important;
-        line-height: 1.35 !important;
-        min-height: 2.35rem !important;
+        border: none !important;
+        box-shadow: 0 4px 14px -1px rgba(79, 70, 229, 0.35) !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     .stFormSubmitButton > button:hover {
-        background: #4338CA !important;
-        border-color: #3730A3 !important;
-        box-shadow: 0 3px 8px rgba(79, 70, 229, 0.3) !important;
+        transform: translateY(-2px) !important;
+        background: linear-gradient(135deg, #4338CA 0%, #3730A3 100%) !important;
+        box-shadow: 0 8px 20px -2px rgba(79, 70, 229, 0.45) !important;
         color: #FFFFFF !important;
     }
     .stFormSubmitButton > button:active {
-        transform: scale(0.98) !important;
-        background: #3730A3 !important;
+        transform: scale(0.97) translateY(0) !important;
+        box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25) !important;
     }
 
     /* Form Inputs & Selects */
     div[data-baseweb="input"] {
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         background-color: #FFFFFF !important;
         border-color: #E2E8F0 !important;
-        transition: all 0.15s ease !important;
+        transition: all 0.2s ease !important;
     }
     div[data-baseweb="input"]:focus-within {
         border-color: #4F46E5 !important;
-        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12) !important;
     }
     div[data-baseweb="select"] > div {
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         border-color: #E2E8F0 !important;
     }
 
-    /* Formal Enterprise Underline Tabs */
+    /* Pill Tabs */
     .stTabs [data-baseweb="tab-list"] {
         gap: 6px !important;
-        background-color: transparent !important;
-        padding: 0 !important;
-        border-bottom: 1px solid #E2E8F0 !important;
-        margin-bottom: 1.25rem !important;
+        background-color: #F1F5F9 !important;
+        padding: 5px !important;
+        border-radius: 12px !important;
+        border-bottom: none !important;
     }
     .stTabs [data-baseweb="tab"] {
-        border-radius: 0 !important;
+        border-radius: 8px !important;
         padding: 8px 16px !important;
-        font-weight: 500 !important;
+        font-weight: 600 !important;
         font-size: 0.88rem !important;
         color: #64748B !important;
         border: none !important;
-        border-bottom: 2px solid transparent !important;
         background-color: transparent !important;
-        transition: all 0.15s ease !important;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #0F172A !important;
-        border-bottom-color: #CBD5E1 !important;
+        transition: all 0.2s ease !important;
     }
     .stTabs [aria-selected="true"] {
-        background-color: transparent !important;
+        background-color: #FFFFFF !important;
         color: #4F46E5 !important;
-        font-weight: 600 !important;
-        border-bottom: 2px solid #4F46E5 !important;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08) !important;
     }
     .stTabs [data-baseweb="tab-highlight"] {
         display: none !important;
@@ -219,25 +229,28 @@ st.markdown("""
         display: none !important;
     }
 
-    /* KPI Metric Cards - Clean Formal Box */
+    /* KPI Metric Cards */
     div[data-testid="stMetric"] {
-        background: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 10px !important;
-        padding: 14px 18px !important;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
-        transition: border-color 0.15s ease !important;
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(226, 232, 240, 0.85) !important;
+        border-radius: 14px !important;
+        padding: 16px 20px !important;
+        box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.03) !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
     }
     div[data-testid="stMetric"]:hover {
-        border-color: #CBD5E1 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 20px -2px rgba(15, 23, 42, 0.06) !important;
     }
     div[data-testid="stMetricValue"] {
-        font-size: 1.55rem !important;
+        font-size: 1.7rem !important;
         font-weight: 700 !important;
         color: #0F172A !important;
     }
     div[data-testid="stMetricLabel"] {
-        font-size: 0.78rem !important;
+        font-size: 0.82rem !important;
         font-weight: 600 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.04em !important;
@@ -293,29 +306,29 @@ def run_db_query(query: str, params: tuple = None, fallback_func=None):
         return pd.DataFrame()
 
 # -----------------------------------------------------------------------------
-# Top Taskbar Functions (Unified Formal Navigation Bar)
+# Top Taskbar Functions
 # -----------------------------------------------------------------------------
 def render_landing_taskbar():
     st.markdown("""
     <div class="landing-taskbar">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="background: #4F46E5; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #ffffff; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.28);">
                 🎓
             </div>
             <div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-weight: 700; font-size: 1.15rem; color: #0F172A; letter-spacing: -0.01em;">InternHub</span>
-                    <span style="background: #EEF2FF; color: #4F46E5; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; border: 1px solid #C7D2FE;">SVNIT SURAT</span>
+                    <span style="font-weight: 800; font-size: 1.3rem; color: #0F172A; letter-spacing: -0.02em;">InternHub</span>
+                    <span style="background: #EEF2FF; color: #4F46E5; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; border: 1px solid #C7D2FE;">SVNIT SURAT</span>
                 </div>
-                <div style="font-size: 0.75rem; color: #64748B;">Academic Internship Management System</div>
+                <div style="font-size: 0.8rem; color: #64748B;">CS203 Database Management Systems Project</div>
             </div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="display: inline-flex; align-items: center; gap: 6px; background: #ECFDF5; border: 1px solid #A7F3D0; padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; color: #065F46;">
+            <div style="display: flex; align-items: center; gap: 6px; background: #ECFDF5; border: 1px solid #A7F3D0; padding: 5px 12px; border-radius: 9999px; font-size: 0.78rem; font-weight: 600; color: #065F46;">
                 <span style="width: 7px; height: 7px; background: #10B981; border-radius: 50%; display: inline-block;"></span>
-                <span>Cloud Relational Engine Active</span>
+                Cloud Engine Active
             </div>
-            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; color: #475569;">
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 5px 12px; border-radius: 9999px; font-size: 0.78rem; font-weight: 600; color: #475569;">
                 Team sandpaper
             </div>
         </div>
@@ -323,98 +336,149 @@ def render_landing_taskbar():
     """, unsafe_allow_html=True)
 
 def render_authenticated_taskbar(role: str, profile: dict):
-    role_labels = {
-        "admin": "Administrator",
-        "mentor": "Faculty Mentor",
-        "intern": "Student Intern"
+    role_badges = {
+        "admin": ("👑 Administrator", "badge-admin"),
+        "mentor": ("👨‍🏫 Faculty Mentor", "badge-mentor"),
+        "intern": ("🎓 Student Intern", "badge-intern")
     }
-    role_title = role_labels.get(role, role.capitalize())
-    badge_style = {
-        "admin": "background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE;",
-        "mentor": "background: #F0F9FF; color: #0284C7; border: 1px solid #BAE6FD;",
-        "intern": "background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0;"
-    }.get(role, "background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0;")
+    role_title, badge_class = role_badges.get(role, (role.capitalize(), "badge-mentor"))
     
-    eng = st.session_state.db_manager.active_engine
-    eng_label = "MySQL Server" if eng == "mysql" else "Cloud SQLite"
-    eng_color = "#10B981" if eng == "mysql" else "#0284C7"
-    eng_bg = "#ECFDF5" if eng == "mysql" else "#F0F9FF"
-    eng_border = "#A7F3D0" if eng == "mysql" else "#BAE6FD"
-
-    with st.container(border=True):
-        col_brand, col_engine, col_user, col_action = st.columns(
-            [2.5, 2.2, 3.8, 1.2], 
-            vertical_alignment="center"
-        )
-        with col_brand:
-            st.markdown("""
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="background: #4F46E5; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; color: #ffffff; flex-shrink: 0;">
+    col_tb1, col_tb2 = st.columns([3.8, 1.2])
+    with col_tb1:
+        st.markdown(f"""
+        <div class="auth-taskbar">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.28);">
                     🎓
                 </div>
                 <div>
-                    <div style="font-weight: 700; font-size: 1.05rem; color: #0F172A; line-height: 1.2;">InternHub</div>
-                    <div style="font-size: 0.74rem; color: #64748B; font-weight: 500;">SVNIT Surat</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-weight: 800; font-size: 1.3rem; color: #0F172A; letter-spacing: -0.02em;">InternHub</span>
+                        <span class="role-badge {badge_class}">{role_title}</span>
+                    </div>
+                    <div style="font-size: 0.82rem; color: #64748B;">{profile.get('name', 'User')} • SVNIT Surat • {profile.get('email', '')}</div>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
+    with col_tb2:
+        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+        if st.button("🚪 Sign Out", key="topbar_signout", use_container_width=True):
+            logout()
+
+# -----------------------------------------------------------------------------
+# SIDEBAR (Visible only when authenticated)
+# -----------------------------------------------------------------------------
+if st.session_state.authenticated:
+    with st.sidebar:
+        st.image("https://img.icons8.com/fluency/96/database.png", width=52)
+        st.markdown("### **InternHub Portal**")
+        st.caption("Team: **sandpaper** • CS203 SVNIT Surat")
+        
+        role = st.session_state.user_role
+        prof = st.session_state.user_profile
+        
+        st.markdown("---")
+        badge_class = f"badge-{role}"
+        role_label = {
+            "admin": "👑 Administrator",
+            "mentor": "👨‍🏫 Faculty Mentor",
+            "intern": "🎓 Student Intern"
+        }.get(role, role.capitalize())
+        
+        st.markdown(f'<span class="role-badge {badge_class}">{role_label}</span>', unsafe_allow_html=True)
+        st.markdown(f"**{prof.get('name', 'User')}**")
+        if "detail" in prof and prof["detail"]:
+            st.caption(prof["detail"])
             
-        with col_engine:
-            st.markdown(f"""
-            <div style="display: inline-flex; align-items: center; gap: 6px; background: {eng_bg}; border: 1px solid {eng_border}; padding: 4px 10px; border-radius: 9999px; font-size: 0.76rem; font-weight: 600; color: #334155;">
-                <span style="width: 7px; height: 7px; background: {eng_color}; border-radius: 50%; display: inline-block;"></span>
-                <span>Engine: {eng_label}</span>
-            </div>
-            """, unsafe_allow_html=True)
+        if st.button("🚪 Log Out", key="sidebar_logout_btn", use_container_width=True):
+            logout()
             
-        with col_user:
-            st.markdown(f"""
-            <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
-                <div style="text-align: right;">
-                    <div style="font-weight: 600; font-size: 0.88rem; color: #0F172A; line-height: 1.2;">{profile.get('name', 'User')}</div>
-                    <div style="font-size: 0.74rem; color: #64748B;">{profile.get('email', '')}</div>
-                </div>
-                <span style="{badge_style} font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.02em; white-space: nowrap;">
-                    {role_title}
-                </span>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        with col_action:
-            if st.button("Sign Out", key="topbar_signout", use_container_width=True):
-                logout()
+        st.markdown("---")
+        
+        # Database Engine Status
+        st.markdown("#### ⚙️ Database Engine")
+        eng = st.session_state.db_manager.active_engine
+        if eng == "mysql":
+            st.success(f"🟢 **Engine:** MySQL Workbench ({st.session_state.db_manager.database})")
+        else:
+            st.info("☁️ **Engine:** Autonomous Relational Cloud Engine (SQLite)")
+            st.caption("Interactive relational database engine.")
+
+        # Engine Switcher Expander
+        with st.expander("Database Connection Settings"):
+            eng_choice = st.radio("Active Engine:", ["Autonomous Cloud Engine (SQLite)", "MySQL Server (Local/Remote)"], 
+                                  index=0 if eng == "sqlite" else 1)
+            if eng_choice == "MySQL Server (Local/Remote)":
+                m_host = st.text_input("Host", value=st.session_state.db_manager.host)
+                m_port = st.number_input("Port", value=st.session_state.db_manager.port, step=1)
+                m_user = st.text_input("User", value=st.session_state.db_manager.user)
+                m_pass = st.text_input("Password", type="password", value=st.session_state.db_manager.password)
+                m_db = st.text_input("Database", value=st.session_state.db_manager.database)
+                
+                if st.button("Connect MySQL", use_container_width=True):
+                    st.session_state.db_manager.host = m_host
+                    st.session_state.db_manager.port = int(m_port)
+                    st.session_state.db_manager.user = m_user
+                    st.session_state.db_manager.password = m_pass
+                    st.session_state.db_manager.database = m_db
+                    ok, msg = st.session_state.db_manager.set_engine("mysql")
+                    if ok:
+                        st.success(msg)
+                        st.rerun()
+                    else:
+                        st.error(f"Connection failed: {msg}")
+            else:
+                if eng != "sqlite":
+                    if st.button("Switch to Cloud SQLite", use_container_width=True):
+                        st.session_state.db_manager.set_engine("sqlite")
+                        st.rerun()
+
+        st.markdown("---")
+        st.markdown("""
+        <div style="font-size: 0.75rem; color: #94A3B8;">
+            Academic Year: 2026-27<br>
+            SVNIT Surat • CS203 Project
+        </div>
+        """, unsafe_allow_html=True)
+
 
 # =============================================================================
 # SCREEN 1: LOGIN / ROLE SELECTOR (If not authenticated)
 # =============================================================================
 if not st.session_state.authenticated:
+    # Hide sidebar completely on landing page & set clean centered width
+    st.markdown("""
+    <style>
+        [data-testid="stSidebar"], [data-testid="collapsedControl"] {
+            display: none !important;
+        }
+        .main .block-container {
+            max-width: 1240px !important;
+            padding-top: 1.5rem !important;
+            padding-bottom: 3rem !important;
+            margin: 0 auto !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     # Top Taskbar for Landing Page
     render_landing_taskbar()
 
     col_login, col_info = st.columns([1.15, 1.35], gap="large")
 
     with col_login:
-        # Quick-Fill Test Accounts Strip (Formal 1-click pills)
+        # Quick-Fill Test Accounts Strip (No expander, 1-click tactile pills)
         st.markdown("""
-        <div style="font-size: 0.76rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+        <div style="font-size: 0.78rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
             ⚡ Quick Demo Logins
         </div>
         """, unsafe_allow_html=True)
         t_col1, t_col2, t_col3 = st.columns(3)
         with t_col1:
-            if st.button("Administrator", key="demo_admin", use_container_width=True):
+            if st.button("👑 Admin", key="demo_admin", use_container_width=True):
                 st.session_state.fill_email = "admin@svnit.ac.in"
                 st.session_state.fill_password = "admin123"
-                st.rerun()
-        with t_col2:
-            if st.button("Faculty Mentor", key="demo_mentor", use_container_width=True):
-                st.session_state.fill_email = "rajesh.sharma@svnit.ac.in"
-                st.session_state.fill_password = "password123"
-                st.rerun()
-        with t_col3:
-            if st.button("Student Intern", key="demo_intern", use_container_width=True):
-                st.session_state.fill_email = "aarav.shah@example.com"
-                st.session_state.fill_password = "password123"
                 st.rerun()
         with t_col2:
             if st.button("👨‍🏫 Mentor", key="demo_mentor", use_container_width=True):
@@ -604,54 +668,15 @@ else:
     # Top Taskbar with user identity & quick logout
     render_authenticated_taskbar(role, profile)
 
-    # Collapsible Database Connection & Engine Configuration
-    with st.expander("⚙️ Database Engine & Connection Settings", expanded=False):
-        c_eng1, c_eng2 = st.columns([1, 2])
-        with c_eng1:
-            eng = st.session_state.db_manager.active_engine
-            eng_choice = st.radio(
-                "Active Relational Engine:", 
-                ["Autonomous Relational Engine (SQLite)", "MySQL Server (Local/Remote)"], 
-                index=0 if eng == "sqlite" else 1
-            )
-        with c_eng2:
-            if eng_choice == "MySQL Server (Local/Remote)":
-                m_c1, m_c2 = st.columns(2)
-                with m_c1:
-                    m_host = st.text_input("Host", value=st.session_state.db_manager.host)
-                    m_port = st.number_input("Port", value=st.session_state.db_manager.port, step=1)
-                    m_user = st.text_input("User", value=st.session_state.db_manager.user)
-                with m_c2:
-                    m_pass = st.text_input("Password", type="password", value=st.session_state.db_manager.password)
-                    m_db = st.text_input("Database", value=st.session_state.db_manager.database)
-                    if st.button("Connect MySQL Server", use_container_width=True):
-                        st.session_state.db_manager.host = m_host
-                        st.session_state.db_manager.port = int(m_port)
-                        st.session_state.db_manager.user = m_user
-                        st.session_state.db_manager.password = m_pass
-                        st.session_state.db_manager.database = m_db
-                        ok, msg = st.session_state.db_manager.set_engine("mysql")
-                        if ok:
-                            st.success(msg)
-                            st.rerun()
-                        else:
-                            st.error(f"Connection failed: {msg}")
-            else:
-                st.info("Operating on Autonomous Relational Engine (SQLite) with pre-seeded datasets, stored procedures, and triggers.")
-                if eng != "sqlite":
-                    if st.button("Switch to Cloud SQLite Engine", use_container_width=True):
-                        st.session_state.db_manager.set_engine("sqlite")
-                        st.rerun()
-
     # -------------------------------------------------------------------------
     # VIEW TYPE 1: ADMIN / HR PORTAL
     # -------------------------------------------------------------------------
     if role == "admin":
         tab_admin1, tab_admin2, tab_admin3, tab_admin4 = st.tabs([
-            "Executive Dashboard", 
-            "Verify & Onboard Interns", 
-            "Monthly Stipend Payroll", 
-            "Faculty Mentors & Quotas"
+            "📊 Executive Dashboard", 
+            "➕ Verify & Onboard Interns", 
+            "💰 Monthly Stipend Payroll", 
+            "👥 Faculty Mentors & Quotas"
         ])
 
         with tab_admin1:
@@ -681,10 +706,10 @@ else:
             with col_d2:
                 st.markdown("##### Mentor Workload & Capacity Utilization")
                 if not df_mentors.empty:
-                    st.dataframe(df_mentors[['mentor_name', 'dept_name', 'current_active_interns', 'max_capacity', 'capacity_status']], use_container_width=True, hide_index=True)
+                    st.dataframe(df_mentors[['mentor_name', 'dept_name', 'current_active_interns', 'max_capacity', 'capacity_status']], use_container_width=True)
 
             st.markdown("##### Master Intern Relational View")
-            st.dataframe(df_interns, use_container_width=True, hide_index=True)
+            st.dataframe(df_interns, use_container_width=True)
 
         with tab_admin2:
             st.markdown("#### Verify Student Registrations & Onboard Interns")
@@ -707,7 +732,7 @@ else:
             if not df_pending.empty:
                 st.warning(f"🔔 **{len(df_pending)} student application(s) awaiting verification and mentor allocation.**")
                 disp_cols = ['intern_id', 'student_name', 'email', 'college_name', 'dept_name', 'requested_mentor']
-                st.dataframe(df_pending[disp_cols], use_container_width=True, hide_index=True)
+                st.dataframe(df_pending[disp_cols], use_container_width=True)
 
                 with st.form("verify_student_app_form"):
                     st.markdown("###### Verify & Assign Faculty Mentor")
@@ -755,9 +780,9 @@ else:
 
                     col_v1, col_v2 = st.columns(2)
                     with col_v1:
-                        btn_approve = st.form_submit_button("Verify & Allocate Mentor", use_container_width=True)
+                        btn_approve = st.form_submit_button("Verify & Allocate Mentor ✅", use_container_width=True)
                     with col_v2:
-                        btn_reject = st.form_submit_button("Reject Application", use_container_width=True)
+                        btn_reject = st.form_submit_button("Reject Application ❌", use_container_width=True)
 
                     if btn_approve:
                         ok, msg = st.session_state.db_manager.verify_and_allocate_intern(
@@ -800,7 +825,7 @@ else:
                     e_dt = st.date_input("End Date", datetime.date(2026, 12, 31))
                     stip = st.number_input("Monthly Stipend (₹)", value=20000.0, step=1000.0)
 
-                if st.form_submit_button("Onboard Student Intern", use_container_width=True):
+                if st.form_submit_button("Onboard Student Intern 🚀", use_container_width=True):
                     try:
                         new_id, msg = st.session_state.db_manager.call_sp_onboard_intern(
                             fn, ln, em, ph, clg, d_id, m_id, str(s_dt), str(e_dt), stip
@@ -822,7 +847,7 @@ else:
                 with cs3:
                     w_days = st.number_input("Standard Working Days in Month", value=22, min_value=1, max_value=31)
 
-                if st.form_submit_button("Run Monthly Payroll Routine", use_container_width=True):
+                if st.form_submit_button("Run Monthly Payroll Routine 💵", use_container_width=True):
                     try:
                         cnt, tot = st.session_state.db_manager.call_sp_generate_stipend(pay_m, pay_y, w_days)
                         st.success(f"Payroll batch completed! Processed {cnt} intern(s). Total Disbursed: ₹ {tot:,.2f}")
@@ -831,30 +856,30 @@ else:
 
             st.markdown("##### Disbursed Stipend Statements")
             df_pay = run_db_query("SELECT * FROM stipend_payments ORDER BY payment_id DESC;", fallback_func=mock_data.get_mock_stipends)
-            st.dataframe(df_pay, use_container_width=True, hide_index=True)
+            st.dataframe(df_pay, use_container_width=True)
 
         with tab_admin4:
-            st.markdown("#### Faculty Supervision & Capacity Quotas")
+            st.markdown("#### Faculty Supervision Workload & Quotas")
             df_m = run_db_query("SELECT * FROM vw_mentor_workload;", fallback_func=mock_data.get_mock_mentors)
-            st.dataframe(df_m, use_container_width=True, hide_index=True)
+            st.dataframe(df_m, use_container_width=True)
 
     # -------------------------------------------------------------------------
     # VIEW TYPE 2: FACULTY MENTOR PORTAL
     # -------------------------------------------------------------------------
     elif role == "mentor":
         m_id = profile["id"]
-        st.info(f"Welcome, **{profile['name']}**. Active portal for research supervision.")
+        st.info(f"👨‍🏫 Welcome, **{profile['name']}**. Viewing student interns and deliverables assigned to your supervision.")
 
         tab_m1, tab_m2, tab_m3 = st.tabs([
-            "Supervised Interns", 
-            "Assign Milestone", 
-            "Evaluate Submissions"
+            "👥 Supervised Interns", 
+            "📝 Assign Milestone", 
+            "🎯 Evaluate Submissions"
         ])
 
         with tab_m1:
             st.markdown("#### Active Interns Under Supervision")
             df_my_interns = run_db_query("SELECT * FROM vw_intern_master_summary WHERE mentor_name LIKE ? OR intern_id IN (SELECT intern_id FROM interns WHERE mentor_id = ?)", (f"%{profile['name'].split()[-1]}%", m_id), fallback_func=mock_data.get_mock_interns)
-            st.dataframe(df_my_interns, use_container_width=True, hide_index=True)
+            st.dataframe(df_my_interns, use_container_width=True)
 
         with tab_m2:
             st.markdown("#### Assign New Project Milestone")
@@ -868,7 +893,7 @@ else:
                 t_desc = st.text_area("Requirements & Scope", "Analyze the functional dependencies and produce the relational mapping.")
                 t_dead = st.date_input("Deadline", datetime.date(2026, 11, 20))
 
-                if st.form_submit_button("Assign Milestone", use_container_width=True):
+                if st.form_submit_button("Assign Milestone 📝", use_container_width=True):
                     try:
                         q = "INSERT INTO tasks (intern_id, assigned_by, title, description, deadline, status) VALUES (?, ?, ?, ?, ?, 'TODO')"
                         st.session_state.db_manager.execute_dml(q, (intern_map[t_intern], m_id, t_title, t_desc, str(t_dead)))
@@ -885,7 +910,7 @@ else:
                 WHERE t.assigned_by = ?
             """, (m_id,), fallback_func=mock_data.get_mock_tasks)
             
-            st.dataframe(df_pending, use_container_width=True, hide_index=True)
+            st.dataframe(df_pending, use_container_width=True)
 
             with st.form("grade_task_form"):
                 t_id_input = st.number_input("Task ID to Grade", min_value=1, value=int(df_pending['task_id'].iloc[0]) if not df_pending.empty else 1)
@@ -906,13 +931,13 @@ else:
     # -------------------------------------------------------------------------
     elif role == "intern":
         i_id = profile["id"]
-        st.info(f"Welcome, **{profile['name']}**. Student Academic Workspace.")
+        st.info(f"🎓 Welcome, **{profile['name']}**. Your personalized academic workspace.")
 
         tab_i1, tab_i2, tab_i3, tab_i4 = st.tabs([
-            "Profile & Mentorship", 
-            "Daily Attendance", 
-            "Deliverables & Submissions", 
-            "Monthly Stipend Slips"
+            "👤 Profile & Mentorship", 
+            "📅 Daily Attendance", 
+            "📁 Deliverables & Submissions", 
+            "💵 Monthly Stipend Slips"
         ])
 
         with tab_i1:
@@ -990,7 +1015,7 @@ else:
                             sel_m_id = m_choice_dict[sel_lbl]
                             project_interest = st.text_input("Area of Interest / Learning Objective (Optional):", placeholder="e.g. Relational indexing, Distributed DBMS, Microservices")
 
-                            submit_pref = st.form_submit_button("Submit Mentor Preference", use_container_width=True)
+                            submit_pref = st.form_submit_button("Submit Mentor Preference 🎯", use_container_width=True)
                             if submit_pref:
                                 ok, msg = st.session_state.db_manager.set_intern_preferred_mentor(
                                     i_id, sel_m_id, profile['name']
@@ -1004,7 +1029,7 @@ else:
                 st.info("Loading student profile...")
 
         with tab_i2:
-            st.markdown("#### Daily Attendance & Working Hours")
+            st.markdown("#### 📅 Daily Working Time & Attendance")
 
             df_status = run_db_query("SELECT status FROM interns WHERE intern_id = ?", (i_id,))
             current_status = df_status.iloc[0]['status'] if not df_status.empty else 'ACTIVE'
@@ -1042,7 +1067,7 @@ else:
                         att_hrs = st.slider("Hours Worked Today (0.0 - 12.0)", 0.0, 12.0, 8.0, 0.5)
                         att_rmk = st.text_input("Daily Work Summary / Activity Log", "Worked on database assignment modules")
 
-                        if st.form_submit_button("Record Today's Attendance", use_container_width=True):
+                        if st.form_submit_button("Record Today's Attendance 📅", use_container_width=True):
                             try:
                                 q = "INSERT INTO attendance (intern_id, att_date, status, hours_logged, remarks) VALUES (?, ?, ?, ?, ?)"
                                 st.session_state.db_manager.execute_dml(q, (i_id, today_str, att_st, att_hrs, att_rmk))
@@ -1052,24 +1077,24 @@ else:
                                 st.error(f"Database Validation Error: {ex}")
 
             st.markdown("---")
-            st.markdown("##### Verified Attendance Records")
+            st.markdown("##### 📜 Verified Attendance Records")
             df_my_att = run_db_query(
                 "SELECT att_id, att_date, status, hours_logged, remarks FROM attendance WHERE intern_id = ? ORDER BY att_date DESC",
                 (i_id,)
             )
-            st.dataframe(df_my_att, use_container_width=True, hide_index=True)
+            st.dataframe(df_my_att, use_container_width=True)
 
         with tab_i3:
             st.markdown("#### Assigned Deliverables & Submissions")
             df_my_tasks = run_db_query("SELECT task_id, title, deadline, status, score, submission_url FROM tasks WHERE intern_id = ?", (i_id,), fallback_func=mock_data.get_mock_tasks)
-            st.dataframe(df_my_tasks, use_container_width=True, hide_index=True)
+            st.dataframe(df_my_tasks, use_container_width=True)
 
             with st.form("submit_work_form"):
                 st.markdown("##### Submit Completed Work Link")
                 t_sub_id = st.number_input("Task ID", min_value=1, value=int(df_my_tasks['task_id'].iloc[0]) if not df_my_tasks.empty else 1)
                 sub_url = st.text_input("Deliverable URL (GitHub / Google Drive / Report Link)", "https://github.com/sandpaper/internhub/task-submission")
 
-                if st.form_submit_button("Submit Deliverable", use_container_width=True):
+                if st.form_submit_button("Submit Deliverable 🚀", use_container_width=True):
                     try:
                         q = "UPDATE tasks SET status = 'SUBMITTED', submission_url = ? WHERE task_id = ? AND intern_id = ?"
                         st.session_state.db_manager.execute_dml(q, (sub_url, t_sub_id, i_id))
@@ -1080,4 +1105,4 @@ else:
         with tab_i4:
             st.markdown("#### Monthly Stipend Disbursement Statements")
             df_my_stip = run_db_query("SELECT pay_month, pay_year, days_present, total_working_days, calculated_stipend, bonus, net_amount, payment_status, processed_date FROM stipend_payments WHERE intern_id = ? ORDER BY payment_id DESC", (i_id,), fallback_func=mock_data.get_mock_stipends)
-            st.dataframe(df_my_stip, use_container_width=True, hide_index=True)
+            st.dataframe(df_my_stip, use_container_width=True)
