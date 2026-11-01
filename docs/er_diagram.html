@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InternHub - Entity Relationship (ER) Diagram</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 24px;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .header-card {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+      border-left: 6px solid #2563eb;
+    }
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 26px;
+      color: #1e3a8a;
+    }
+    p {
+      margin: 4px 0;
+      color: #475569;
+      font-size: 15px;
+    }
+    .diagram-container {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+    }
+    .controls {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+    }
+    button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #1d4ed8;
+    }
+    @media print {
+      body {
+        padding: 0;
+        background: white;
+      }
+      .controls {
+        display: none;
+      }
+      .header-card, .diagram-container {
+        box-shadow: none;
+        border: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-card">
+    <h1>🎓 InternHub: Entity-Relationship (ER) Diagram</h1>
+    <p><b>Course:</b> CS203 — Database Management Systems (B.Tech. II CSE, Semester-III)</p>
+    <p><b>Institution:</b> Sardar Vallabhbhai National Institute of Technology (SVNIT), Surat</p>
+    <p><b>Team:</b> sandpaper | <b>Database Engine:</b> MySQL 8.0 (InnoDB)</p>
+    <div class="controls">
+      <button onclick="window.print()">🖨️ Print / Save as PDF for Report</button>
+    </div>
+  </div>
+
+  <div class="diagram-container">
+    <div class="mermaid">
+erDiagram
+    DEPARTMENT ||--|{ MENTOR : "employs (1:N)"
+    DEPARTMENT ||--o{ INTERN : "hosts (1:N)"
+    MENTOR ||--o{ INTERN : "supervises (1:N)"
+    MENTOR ||--o{ TASK : "assigns (1:N)"
+    INTERN ||--o{ TASK : "receives (1:N)"
+    INTERN ||--o{ ATTENDANCE : "logs (1:N)"
+    MENTOR ||--o{ PERFORMANCE_REVIEW : "evaluates (1:N)"
+    INTERN ||--o{ PERFORMANCE_REVIEW : "assessed_in (1:N)"
+    INTERN ||--o{ STIPEND_PAYMENT : "receives (1:N)"
+    INTERN ||--o{ AUDIT_LOG : "monitored_by (1:N)"
+
+    DEPARTMENT {
+        int dept_id PK
+        varchar dept_name UK
+        varchar dept_code UK
+        varchar location
+        decimal budget
+    }
+
+    MENTOR {
+        int mentor_id PK
+        varchar first_name
+        varchar last_name
+        varchar email UK
+        varchar phone
+        int dept_id FK
+        varchar designation
+        int max_interns
+    }
+
+    INTERN {
+        int intern_id PK
+        varchar first_name
+        varchar last_name
+        varchar email UK
+        varchar phone
+        varchar college_name
+        int dept_id FK
+        int mentor_id FK
+        date start_date
+        date end_date
+        decimal base_stipend
+        enum status
+    }
+
+    TASK {
+        int task_id PK
+        int intern_id FK
+        int assigned_by FK
+        varchar title
+        text description
+        date deadline
+        enum status
+        decimal score
+        varchar submission_url
+    }
+
+    ATTENDANCE {
+        int att_id PK
+        int intern_id FK
+        date att_date
+        enum status
+        decimal hours_logged
+        varchar remarks
+    }
+
+    PERFORMANCE_REVIEW {
+        int review_id PK
+        int intern_id FK
+        int mentor_id FK
+        date review_date
+        int week_number
+        decimal technical_rating
+        decimal softskills_rating
+        text feedback
+    }
+
+    STIPEND_PAYMENT {
+        int payment_id PK
+        int intern_id FK
+        int pay_month
+        int pay_year
+        int days_present
+        int total_working_days
+        decimal calculated_stipend
+        decimal bonus
+        decimal deductions
+        decimal net_amount
+        enum payment_status
+        date processed_date
+    }
+
+    AUDIT_LOG {
+        int log_id PK
+        varchar action_type
+        varchar table_name
+        int record_id
+        text old_value
+        text new_value
+        varchar changed_by
+        timestamp timestamp
+    }
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      er: {
+        useMaxWidth: true,
+        entityPadding: 15,
+        layoutDirection: 'TB'
+      }
+    });
+  </script>
+</body>
+</html>
