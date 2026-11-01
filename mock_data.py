@@ -71,10 +71,3 @@ def get_mock_stipends():
         {"payment_id": 3, "intern_name": "Rohan Verma", "pay_month": 8, "pay_year": 2026, "days_present": 22, "total_working_days": 22, "calculated_stipend": 25000.00, "bonus": 2500.00, "net_amount": 27500.00, "payment_status": "PROCESSED", "processed_date": "2026-08-31"},
         {"payment_id": 4, "intern_name": "Manish Gupta", "pay_month": 7, "pay_year": 2026, "days_present": 22, "total_working_days": 22, "calculated_stipend": 20000.00, "bonus": 2000.00, "net_amount": 22000.00, "payment_status": "PROCESSED", "processed_date": "2026-07-31"}
     ])
-
-def get_mock_audit_logs():
-    return _create_df([
-        {"log_id": 1, "action_type": "DATABASE_INIT", "table_name": "system", "record_id": 0, "old_value": "-", "new_value": "Initialized InternHub schema & constraints", "changed_by": "DBA_ADMIN", "timestamp": "2026-08-01 09:00:00"},
-        {"log_id": 2, "action_type": "STATUS_CHANGE", "table_name": "interns", "record_id": 1, "old_value": "Status: APPLIED", "new_value": "Status: ACTIVE", "changed_by": "HR_ADMIN", "timestamp": "2026-08-01 09:30:00"},
-        {"log_id": 3, "action_type": "STATUS_CHANGE", "table_name": "interns", "record_id": 9, "old_value": "Status: ACTIVE", "new_value": "Status: COMPLETED", "changed_by": "SYSTEM", "timestamp": "2026-07-31 17:00:00"}
-    ])

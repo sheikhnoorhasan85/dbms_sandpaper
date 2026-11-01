@@ -4,7 +4,7 @@ Course: CS203 Database Management Systems (B.Tech CSE Sem-III, SVNIT Surat)
 Team: sandpaper
 Title: InternHub
 Features:
-- Role-Based Access Control (Admin, Mentor, Intern, Evaluator)
+- Role-Based Access Control (Admin, Mentor, Intern)
 - Tailored Views per User Type
 - Dual-Engine Support (MySQL Workbench & Autonomous Cloud Relational Engine)
 - Ready for Public Cloud Deployment
@@ -51,7 +51,6 @@ st.markdown("""
     .badge-admin { background-color: #FEE2E2; color: #991B1B; }
     .badge-mentor { background-color: #E0E7FF; color: #3730A3; }
     .badge-intern { background-color: #D1FAE5; color: #065F46; }
-    .badge-evaluator { background-color: #FEF3C7; color: #92400E; }
     
     .login-card {
         background: #ffffff;
@@ -90,7 +89,7 @@ if "db_manager" not in st.session_state:
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 if "user_role" not in st.session_state:
-    st.session_state.user_role = None  # "admin", "mentor", "intern", "evaluator"
+    st.session_state.user_role = None  # "admin", "mentor", "intern"
 if "user_profile" not in st.session_state:
     st.session_state.user_profile = {}
 
@@ -135,8 +134,7 @@ with st.sidebar:
         role_label = {
             "admin": "👑 HR / Admin",
             "mentor": "👨‍🏫 Faculty Mentor",
-            "intern": "🎓 Student Intern",
-            "evaluator": "🔍 Professor / Evaluator"
+            "intern": "🎓 Student Intern"
         }.get(role, role.capitalize())
         
         st.markdown(f'<span class="role-badge {badge_class}">{role_label}</span>', unsafe_allow_html=True)
@@ -244,7 +242,7 @@ if not st.session_state.authenticated:
                             st.error("Invalid credentials or account inactive. Please check your email and password.")
 
             # Quick Test Credentials Helper
-            with st.expander("📋 Quick-Fill Test Accounts for Demo / Viva Evaluation", expanded=True):
+            with st.expander("📋 Quick-Fill Test Accounts for Demo", expanded=True):
                 st.caption("Click any account to automatically fill the login form with seed credentials:")
                 t_col1, t_col2 = st.columns(2)
                 with t_col1:
@@ -260,10 +258,6 @@ if not st.session_state.authenticated:
                     if st.button("🎓 Intern (Aarav Shah)", key="demo_intern", use_container_width=True):
                         st.session_state.fill_email = "aarav.shah@example.com"
                         st.session_state.fill_password = "password123"
-                        st.rerun()
-                    if st.button("🔍 Lab Evaluator", key="demo_eval", use_container_width=True):
-                        st.session_state.fill_email = "evaluator@svnit.ac.in"
-                        st.session_state.fill_password = "admin123"
                         st.rerun()
 
         with tab_register:
@@ -347,30 +341,14 @@ if not st.session_state.authenticated:
         st.markdown("""
         - **Student Guidance:** Monitor and mentor active interns assigned to your research domain.
         - **Task Evaluation:** Review submitted project deliverables and grade student milestone progress.
-        - **Weekly Reviews:** Provide structured technical and professional feedback to guide students.
         """)
 
         st.markdown("#### 👑 Campus Administration & Incubation Cell")
         st.markdown("""
         - **Department Oversight:** Live departmental metrics, mentor workload, and student distribution.
-        - **Automated Payroll:** Calculate and disburse monthly stipends with automated audit logs.
+        - **Automated Payroll:** Calculate and disburse monthly stipends with pro-rated attendance calculation.
         - **Smooth Onboarding:** Process new applications and allocate student mentors efficiently.
         """)
-
-        with st.expander("ℹ️ SVNIT CS203 DBMS Project & Architecture Notes (For Evaluators)"):
-            st.markdown("""
-            **Technical Implementation Highlights:**
-            - **Authentication Model:** Relational `users` table with SHA-256 cryptographic password hashing.
-            - **Role-Based Access Control (RBAC):** Strict role-based isolation (Admin, Mentor, Intern, Evaluator) enforcing the Principle of Least Privilege (PoLP).
-            - **Tamper-Proof Working Time:** Database trigger `trg_prevent_attendance_tampering` prevents student hours modification once submitted.
-            - **Transactional Registration:** Stored procedure `sp_register_student_user` uses an atomic `START TRANSACTION ... COMMIT` across `interns`, `users`, and `audit_logs`.
-            - **Cursor-Based Payroll:** Stored procedure `sp_generate_monthly_stipend` executes explicit cursor loops for pro-rated stipend calculation.
-            - **Relational Design:** 9 tables normalized up to BCNF with cascading foreign keys, check constraints, and audit logging.
-            """)
-            c_m1, c_m2, c_m3 = st.columns(3)
-            c_m1.metric("Database Auth", "users Table", "SHA-256")
-            c_m2.metric("Tamper Protection", "DB Trigger", "Immutable")
-            c_m3.metric("Normalization", "3NF & BCNF", "Zero Redundancy")
 
 
 # =============================================================================
@@ -388,13 +366,11 @@ else:
     # VIEW TYPE 1: ADMIN / HR PORTAL
     # -------------------------------------------------------------------------
     if role == "admin":
-        tab_admin1, tab_admin2, tab_admin3, tab_admin4, tab_admin5, tab_admin6 = st.tabs([
+        tab_admin1, tab_admin2, tab_admin3, tab_admin4 = st.tabs([
             "📊 Executive Dashboard", 
             "➕ Verify & Onboard Interns", 
             "💰 Monthly Stipend Run (Cursor)", 
-            "👥 Faculty Mentors & Quotas", 
-            "🛠️ Attendance Corrections (Override)",
-            "📜 System Audit Trail"
+            "👥 Faculty Mentors & Quotas"
         ])
 
         with tab_admin1:
@@ -582,52 +558,6 @@ else:
             df_m = run_db_query("SELECT * FROM vw_mentor_workload;", fallback_func=mock_data.get_mock_mentors)
             st.dataframe(df_m, use_container_width=True)
 
-        with tab_admin5:
-            st.markdown("#### 🛠️ Supervisor Attendance Hours Adjustment")
-            st.caption("Policy Rule: Interns cannot modify logged hours. Only HR Administrators and Mentors can adjust hours with an audit justification.")
-
-            df_all_att = run_db_query("""
-                SELECT a.att_id, a.intern_id, i.first_name || ' ' || i.last_name AS intern_name, a.att_date, a.status, a.hours_logged, a.remarks
-                FROM attendance a
-                JOIN interns i ON a.intern_id = i.intern_id
-                ORDER BY a.att_date DESC
-            """)
-
-            if not df_all_att.empty:
-                st.dataframe(df_all_att, use_container_width=True)
-
-                with st.form("admin_adjust_hours_form"):
-                    att_rec_map = {f"Record #{r['att_id']}: {r['intern_name']} on {r['att_date']} (Current: {r['hours_logged']} hrs)": r['att_id'] for _, r in df_all_att.iterrows()}
-                    selected_rec_key = st.selectbox("Select Attendance Record to Adjust:", list(att_rec_map.keys()))
-                    selected_att_id = att_rec_map[selected_rec_key]
-
-                    c_ad1, c_ad2 = st.columns(2)
-                    with c_ad1:
-                        new_hrs = st.number_input("Corrected Hours Logged (0.0 - 24.0)", min_value=0.0, max_value=24.0, value=8.0, step=0.5, key="admin_hrs_in")
-                    with c_ad2:
-                        adjust_reason = st.text_input("Mandatory Adjustment Reason", placeholder="e.g. Verified lab project overtime / Correction", key="admin_reason_in")
-
-                    if st.form_submit_button("Execute sp_adjust_attendance_hours ⚙️", use_container_width=True):
-                        if not adjust_reason.strip():
-                            st.error("Please provide a valid reason for adjusting logged attendance.")
-                        else:
-                            ok, msg = st.session_state.db_manager.adjust_attendance_hours(
-                                selected_att_id, new_hrs, adjust_reason, profile['name']
-                            )
-                            if ok:
-                                st.success(msg)
-                                st.rerun()
-                            else:
-                                st.error(msg)
-            else:
-                st.info("No attendance records found.")
-
-        with tab_admin6:
-            st.markdown("#### System Audit Trail (`audit_logs`)")
-            st.caption("Captures all database triggers, status changes, attendance adjustments, and administrative operations.")
-            df_a = run_db_query("SELECT * FROM audit_logs ORDER BY log_id DESC;", fallback_func=mock_data.get_mock_audit_logs)
-            st.dataframe(df_a, use_container_width=True)
-
     # -------------------------------------------------------------------------
     # VIEW TYPE 2: FACULTY MENTOR PORTAL
     # -------------------------------------------------------------------------
@@ -635,12 +565,10 @@ else:
         m_id = profile["id"]
         st.info(f"👨‍🏫 Welcome, **{profile['name']}**. You are viewing only the student interns and deliverables assigned to your research supervision.")
 
-        tab_m1, tab_m2, tab_m3, tab_m4, tab_m5 = st.tabs([
+        tab_m1, tab_m2, tab_m3 = st.tabs([
             "👥 My Supervised Interns", 
             "📝 Assign New Task", 
-            "🎯 Evaluate & Score Submissions", 
-            "⭐ Submit Weekly Review",
-            "🛠️ Adjust Intern Hours (Override)"
+            "🎯 Evaluate & Score Submissions"
         ])
 
         with tab_m1:
@@ -694,75 +622,6 @@ else:
                         st.success(f"Task #{t_id_input} updated to {new_status} with score {score_val}!")
                     except Exception as ex:
                         st.error(f"Validation Error: {ex}")
-
-        with tab_m4:
-            st.markdown("#### Submit Weekly Performance Review")
-            st.caption("Enforces `UNIQUE(intern_id, week_number)` constraint.")
-
-            with st.form("mentor_weekly_review_form"):
-                df_assigned = run_db_query("SELECT intern_id, first_name || ' ' || last_name AS name FROM interns WHERE mentor_id = ?", (m_id,))
-                intern_map = {f"#{row['intern_id']} - {row['name']}": row['intern_id'] for _, row in df_assigned.iterrows()} if not df_assigned.empty else {"#1 - Aarav Shah": 1}
-
-                rev_intern = st.selectbox("Intern", list(intern_map.keys()))
-                rev_week = st.slider("Academic Week Number", 1, 16, 5)
-                cr1, cr2 = st.columns(2)
-                with cr1:
-                    r_tech = st.slider("Technical Skill Rating (1.0 - 5.0)", 1.0, 5.0, 4.6, 0.1)
-                with cr2:
-                    r_soft = st.slider("Soft Skills & Punctuality (1.0 - 5.0)", 1.0, 5.0, 4.4, 0.1)
-                r_notes = st.text_area("Remarks / Feedback", "Demonstrated high technical competence in indexing and transaction isolation.")
-
-                if st.form_submit_button("Submit Evaluation ⭐"):
-                    try:
-                        q = """
-                            INSERT INTO performance_reviews (intern_id, mentor_id, review_date, week_number, technical_rating, softskills_rating, feedback)
-                            VALUES (?, ?, DATE('now'), ?, ?, ?, ?)
-                        """
-                        st.session_state.db_manager.execute_dml(q, (intern_map[rev_intern], m_id, rev_week, r_tech, r_soft, r_notes))
-                        st.success(f"Evaluation for Week {rev_week} recorded successfully!")
-                    except Exception as ex:
-                        st.error(f"Database Constraint Error (e.g., Duplicate week review): {ex}")
-
-        with tab_m5:
-            st.markdown("#### 🛠️ Supervisor Attendance Hours Adjustment")
-            st.caption("Policy Rule: Interns cannot edit working hours. Supervisors can adjust records using `sp_adjust_attendance_hours`, which logs an immutable audit event.")
-
-            df_mentor_att = run_db_query("""
-                SELECT a.att_id, a.intern_id, i.first_name || ' ' || i.last_name AS intern_name, a.att_date, a.status, a.hours_logged, a.remarks
-                FROM attendance a
-                JOIN interns i ON a.intern_id = i.intern_id
-                WHERE i.mentor_id = ?
-                ORDER BY a.att_date DESC
-            """, (m_id,))
-
-            if not df_mentor_att.empty:
-                st.dataframe(df_mentor_att, use_container_width=True)
-
-                with st.form("mentor_adjust_hours_form"):
-                    att_rec_map = {f"Record #{r['att_id']}: {r['intern_name']} on {r['att_date']} (Current: {r['hours_logged']} hrs)": r['att_id'] for _, r in df_mentor_att.iterrows()}
-                    selected_rec_key = st.selectbox("Select Attendance Record to Adjust:", list(att_rec_map.keys()))
-                    selected_att_id = att_rec_map[selected_rec_key]
-
-                    c_adj1, c_adj2 = st.columns(2)
-                    with c_adj1:
-                        new_hrs = st.number_input("Corrected Hours Logged (0.0 - 24.0)", min_value=0.0, max_value=24.0, value=8.0, step=0.5, key="m_hrs_in")
-                    with c_adj2:
-                        adjust_reason = st.text_input("Mandatory Adjustment Reason", placeholder="e.g. Lab overtime verified / System correction", key="m_reason_in")
-
-                    if st.form_submit_button("Submit Hours Adjustment ⚙️", use_container_width=True):
-                        if not adjust_reason.strip():
-                            st.error("Please provide a valid reason for adjusting logged attendance.")
-                        else:
-                            ok, msg = st.session_state.db_manager.adjust_attendance_hours(
-                                selected_att_id, new_hrs, adjust_reason, profile['name']
-                            )
-                            if ok:
-                                st.success(msg)
-                                st.rerun()
-                            else:
-                                st.error(msg)
-            else:
-                st.info("No attendance records logged yet for your supervised interns.")
 
     # -------------------------------------------------------------------------
     # VIEW TYPE 3: STUDENT INTERN PORTAL
@@ -914,7 +773,6 @@ else:
                                 st.rerun()
                             except Exception as ex:
                                 st.error(f"Database Validation Error: {ex}")
-                            st.error(f"Database Validation Error: {ex}")
 
             st.markdown("---")
             st.markdown("##### 📜 My Verified Attendance History (Read-Only)")
@@ -947,80 +805,3 @@ else:
             st.markdown("#### Monthly Stipend Disbursement Statements")
             df_my_stip = run_db_query("SELECT pay_month, pay_year, days_present, total_working_days, calculated_stipend, bonus, net_amount, payment_status, processed_date FROM stipend_payments WHERE intern_id = ? ORDER BY payment_id DESC", (i_id,), fallback_func=mock_data.get_mock_stipends)
             st.dataframe(df_my_stip, use_container_width=True)
-
-    # -------------------------------------------------------------------------
-    # VIEW TYPE 4: EVALUATOR / PROFESSOR PORTAL (Full inspection mode)
-    # -------------------------------------------------------------------------
-    elif role == "evaluator":
-        st.info("🔍 **Academic Evaluation Mode Active**. You have complete administrative oversight across all database tables, procedural code, triggers, and query consoles.")
-
-        tab_e1, tab_e2, tab_e3, tab_e4 = st.tabs([
-            "🏢 All Institutional Portals", 
-            "⚡ SQL Workbench Console", 
-            "📐 Relational ER Diagram", 
-            "🎓 Viva & Rubric Checklist"
-        ])
-
-        with tab_e1:
-            st.markdown("#### Switch into any user perspective directly:")
-            c_p1, c_p2, c_p3 = st.columns(3)
-            with c_p1:
-                if st.button("Preview as HR Admin", use_container_width=True):
-                    login_as("admin", {"name": "HR Directorate", "detail": "Incubation Cell", "id": 1})
-            with c_p2:
-                if st.button("Preview as Mentor (Dr. Rajesh Sharma)", use_container_width=True):
-                    login_as("mentor", {"name": "Dr. Rajesh Sharma", "detail": "Associate Professor (CSE)", "id": 1})
-            with c_p3:
-                if st.button("Preview as Intern (Aarav Shah)", use_container_width=True):
-                    login_as("intern", {"name": "Aarav Shah", "detail": "Student • SVNIT Surat", "id": 1})
-
-            st.markdown("---")
-            st.markdown("##### Complete Relational Database Tables Overview:")
-            table_list = ["departments", "mentors", "interns", "tasks", "attendance", "performance_reviews", "stipend_payments", "audit_logs", "users"]
-            sel_t = st.selectbox("Inspect Table:", table_list)
-            df_t = run_db_query(f"SELECT * FROM {sel_t};")
-            st.dataframe(df_t, use_container_width=True)
-
-        with tab_e2:
-            st.markdown("#### Interactive SQL Query Runner")
-            presets = {
-                "Master Intern Summary (View)": "SELECT * FROM vw_intern_master_summary;",
-                "Mentor Workload & Capacity Utilization (View)": "SELECT * FROM vw_mentor_workload;",
-                "Recent Audit Trail Events": "SELECT * FROM audit_logs ORDER BY log_id DESC LIMIT 10;",
-                "Tasks with Evaluated Scores": "SELECT * FROM tasks WHERE status = 'APPROVED';"
-            }
-            sel_preset = st.selectbox("Preset Academic Queries:", list(presets.keys()))
-            custom_q = st.text_area("SQL Statement (SELECT only):", value=presets[sel_preset], height=100)
-            if st.button("Execute Query ⚡"):
-                res = run_db_query(custom_q)
-                st.dataframe(res, use_container_width=True)
-
-        with tab_e3:
-            st.markdown("#### Relational Entity-Relationship (ER) Model")
-            st.markdown("""
-            ```mermaid
-            erDiagram
-                DEPARTMENT ||--|{ MENTOR : "employs (1:N)"
-                DEPARTMENT ||--o{ INTERN : "hosts (1:N)"
-                MENTOR ||--o{ INTERN : "supervises (1:N)"
-                MENTOR ||--o{ TASK : "assigns (1:N)"
-                INTERN ||--o{ TASK : "receives (1:N)"
-                INTERN ||--o{ ATTENDANCE : "logs (1:N)"
-                MENTOR ||--o{ PERFORMANCE_REVIEW : "evaluates (1:N)"
-                INTERN ||--o{ PERFORMANCE_REVIEW : "assessed_in (1:N)"
-                INTERN ||--o{ STIPEND_PAYMENT : "receives (1:N)"
-                INTERN ||--o{ AUDIT_LOG : "monitored_by (1:N)"
-            ```
-            """)
-
-        with tab_e4:
-            st.markdown("#### CS203 Rubric Verification Matrix")
-            rubric_df = pd.DataFrame([
-                {"Phase": "Phase A", "Topic": "Requirements Analysis", "Status": "Complete (Admin, Mentor, Intern specs in PROJECT_REPORT.md)"},
-                {"Phase": "Phase B", "Topic": "Conceptual Design (ER)", "Status": "Complete (Mermaid + Crow's foot + Cardinalities)"},
-                {"Phase": "Phase C", "Topic": "Logical Design & Normalization", "Status": "Complete (Proven up to BCNF with Functional Dependencies)"},
-                {"Phase": "Phase D", "Topic": "Physical Design & Procedural Programs", "Status": "Complete (DDL, Triggers, Cursors in Stored Procedures)"},
-                {"Phase": "Phase E", "Topic": "Web Application Implementation", "Status": "Complete (Role-Based Multi-View Streamlit App)"},
-                {"Phase": "Phase F", "Topic": "Demonstration & Viva Preparation", "Status": "Complete (25+ Q&A Defense Guide in VIVA_QUESTIONS.md)"}
-            ])
-            st.dataframe(rubric_df, use_container_width=True)

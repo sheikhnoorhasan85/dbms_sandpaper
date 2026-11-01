@@ -219,11 +219,6 @@ class DatabaseManager:
                 """, (first_name, last_name, email, phone, college, dept_id, mentor_id, start_date, end_date, base_stipend, status))
                 new_id = cursor.lastrowid
 
-                # 3. Insert audit log
-                cursor.execute("""
-                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, ("INSERT", "interns", new_id, None, f"Onboarded: {first_name} {last_name} (Dept: {dept_id})", "HR_ADMIN"))
                 conn.commit()
                 return new_id, "Success: Intern onboarded successfully (Embedded Engine)."
             finally:
@@ -313,20 +308,8 @@ class DatabaseManager:
             else:
                 cursor = conn.cursor()
                 cursor.execute("SELECT AVG(score) FROM tasks WHERE intern_id = ? AND status = 'APPROVED' AND score IS NOT NULL", (intern_id,))
-                avg_task = cursor.fetchone()[0] or 0.0
-                cursor.execute("SELECT AVG(technical_rating), AVG(softskills_rating) FROM performance_reviews WHERE intern_id = ?", (intern_id,))
-                rev = cursor.fetchone()
-                tech = rev[0] or 0.0
-                soft = rev[1] or 0.0
-                avg_mentor_100 = ((tech + soft) / 2.0) * 20.0
-                
-                if avg_task > 0 and avg_mentor_100 > 0:
-                    return round((avg_task * 0.60) + (avg_mentor_100 * 0.40), 2)
-                elif avg_task > 0:
-                    return round(avg_task, 2)
-                elif avg_mentor_100 > 0:
-                    return round(avg_mentor_100, 2)
-                return 0.0
+                res = cursor.fetchone()
+                return round(float(res[0]), 2) if res and res[0] is not None else 0.0
         finally:
             conn.close()
 
@@ -368,59 +351,6 @@ class DatabaseManager:
                         "is_active": row["is_active"]
                     }
                 return None
-            finally:
-                conn.close()
-
-    def adjust_attendance_hours(self, att_id: int, new_hours: float, reason: str, supervisor_name: str) -> Tuple[bool, str]:
-        """Allows supervisors (Admin or Mentor) to adjust an intern's working hours with audit trail."""
-        if new_hours < 0.0 or new_hours > 24.0:
-            return False, "Error: Hours must be between 0.0 and 24.0."
-            
-        if self.active_engine == "mysql":
-            conn = self.get_mysql_connection()
-            try:
-                cursor = conn.cursor()
-                args = [att_id, new_hours, reason, supervisor_name, ""]
-                res = cursor.callproc("sp_adjust_attendance_hours", args)
-                status_msg = res[4]
-                cursor.close()
-                return True, status_msg
-            except Exception as e:
-                return False, str(e)
-            finally:
-                conn.close()
-        else:
-            conn = self.get_sqlite_connection()
-            try:
-                cursor = conn.cursor()
-                cursor.execute("SELECT hours_logged, intern_id, att_date, remarks FROM attendance WHERE att_id = ?", (att_id,))
-                row = cursor.fetchone()
-                if not row:
-                    return False, "Error: Attendance record not found."
-                old_hours = row["hours_logged"]
-                intern_id = row["intern_id"]
-                att_date = row["att_date"]
-                old_remarks = row["remarks"] or ""
-
-                override_tag = f" [SUPERVISOR_OVERRIDE: Adjusted from {old_hours} hrs to {new_hours} hrs by {supervisor_name}. Reason: {reason}]"
-                new_remarks = old_remarks + override_tag
-
-                cursor.execute("UPDATE attendance SET hours_logged = ?, remarks = ? WHERE att_id = ?", (new_hours, new_remarks, att_id))
-                cursor.execute("""
-                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (
-                    "ATTENDANCE_ADJUST",
-                    "attendance",
-                    att_id,
-                    f"Intern #{intern_id} Hours: {old_hours} on {att_date}",
-                    f"Hours: {new_hours} (Supervisor: {supervisor_name}, Reason: {reason})",
-                    supervisor_name
-                ))
-                conn.commit()
-                return True, f"Success: Hours adjusted from {old_hours} to {new_hours} for record #{att_id}."
-            except Exception as e:
-                return False, str(e)
             finally:
                 conn.close()
 
@@ -480,18 +410,6 @@ class DatabaseManager:
                     ) VALUES (?, ?, 'INTERN', ?, ?, 1)
                 """, (clean_email, pwd_hash, new_intern_id, f"{first_name.strip()} {last_name.strip()}"))
                 new_user_id = cursor.lastrowid
-
-                cursor.execute("""
-                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (
-                    "USER_REGISTRATION",
-                    "users",
-                    new_user_id,
-                    None,
-                    f"Registered Student Intern: {first_name.strip()} {last_name.strip()} (Intern ID: #{new_intern_id}, Pref Mentor: #{preferred_mentor_id})",
-                    "SELF_REGISTRATION"
-                ))
                 conn.commit()
                 return True, "Success: Registration completed! You can now sign in."
             except Exception as e:
@@ -507,11 +425,6 @@ class DatabaseManager:
             try:
                 cursor = conn.cursor()
                 cursor.execute("UPDATE interns SET mentor_id = %s WHERE intern_id = %s AND status = 'APPLIED'", (mentor_id, intern_id))
-                cursor.execute("""
-                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-                    VALUES ('MENTOR_PREFERENCE_SELECTED', 'interns', %s, NULL, 
-                            CONCAT('Requested Faculty Mentor #', %s), %s)
-                """, (intern_id, mentor_id, student_name))
                 conn.commit()
                 cursor.close()
                 return True, "Mentor preference successfully saved! Awaiting Admin verification."
@@ -525,10 +438,6 @@ class DatabaseManager:
             try:
                 cursor = conn.cursor()
                 cursor.execute("UPDATE interns SET mentor_id = ? WHERE intern_id = ? AND status = 'APPLIED'", (mentor_id, intern_id))
-                cursor.execute("""
-                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, ("MENTOR_PREFERENCE_SELECTED", "interns", intern_id, None, f"Requested Faculty Mentor #{mentor_id}", student_name))
                 conn.commit()
                 return True, "Mentor preference successfully saved! Awaiting Admin verification."
             except Exception as e:
@@ -548,11 +457,6 @@ class DatabaseManager:
                     SET mentor_id = %s, base_stipend = %s, status = 'ACTIVE' 
                     WHERE intern_id = %s
                 """, (mentor_id, base_stipend, intern_id))
-                cursor.execute("""
-                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-                    VALUES ('INTERN_VERIFY', 'interns', %s, 'Status: APPLIED', 
-                            CONCAT('Status: ACTIVE, Mentor ID: #', %s, ', Stipend: ', %s), %s)
-                """, (intern_id, mentor_id, base_stipend, admin_name))
                 conn.commit()
                 cursor.close()
                 return True, f"Success: Intern #{intern_id} verified and allocated to Mentor #{mentor_id}!"
@@ -581,14 +485,6 @@ class DatabaseManager:
                     SET mentor_id = ?, base_stipend = ?, status = 'ACTIVE' 
                     WHERE intern_id = ?
                 """, (mentor_id, base_stipend, intern_id))
-                cursor.execute("""
-                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (
-                    "INTERN_VERIFY", "interns", intern_id, "Status: APPLIED",
-                    f"Status: ACTIVE, Mentor #{mentor_id} ({m_name}), Stipend: ₹{base_stipend:,.2f}",
-                    admin_name
-                ))
                 conn.commit()
                 return True, f"Success: Intern #{intern_id} verified and allocated to {m_name}!"
             except Exception as e:
@@ -605,10 +501,6 @@ class DatabaseManager:
                 cursor = conn.cursor()
                 cursor.execute("UPDATE interns SET status = 'TERMINATED' WHERE intern_id = %s", (intern_id,))
                 cursor.execute("UPDATE users SET is_active = FALSE WHERE role = 'INTERN' AND reference_id = %s", (intern_id,))
-                cursor.execute("""
-                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-                    VALUES ('APPLICATION_REJECTED', 'interns', %s, 'Status: APPLIED', %s, %s)
-                """, (intern_id, f"Application rejected. Reason: {reason}", admin_name))
                 conn.commit()
                 cursor.close()
                 return True, f"Application for Intern #{intern_id} rejected and account deactivated."
@@ -623,13 +515,6 @@ class DatabaseManager:
                 cursor = conn.cursor()
                 cursor.execute("UPDATE interns SET status = 'TERMINATED' WHERE intern_id = ?", (intern_id,))
                 cursor.execute("UPDATE users SET is_active = 0 WHERE role = 'INTERN' AND reference_id = ?", (intern_id,))
-                cursor.execute("""
-                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (
-                    "APPLICATION_REJECTED", "interns", intern_id, "Status: APPLIED",
-                    f"Application rejected. Reason: {reason}", admin_name
-                ))
                 conn.commit()
                 return True, f"Application for Intern #{intern_id} rejected and account deactivated."
             except Exception as e:
@@ -660,12 +545,11 @@ class DatabaseManager:
             (5, 'ananya.deshmukh@svnit.ac.in', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'MENTOR', 4, 'Ananya Deshmukh', 1),
             (6, 'aarav.shah@example.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'INTERN', 1, 'Aarav Shah', 1),
             (7, 'diya.joshi@example.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'INTERN', 2, 'Diya Joshi', 1),
-            (8, 'rohan.verma@example.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'INTERN', 3, 'Rohan Verma', 1),
-            (9, 'evaluator@svnit.ac.in', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'EVALUATOR', NULL, 'Lab Evaluator (SVNIT)', 1);
+            (8, 'rohan.verma@example.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'INTERN', 3, 'Rohan Verma', 1);
         """)
 
     def _init_sqlite_if_needed(self):
-        """Initializes embedded SQLite database with exact 9 tables, views, and seed data."""
+        """Initializes embedded SQLite database with exact 7 tables, views, and seed data."""
         conn = sqlite3.connect(SQLITE_DB_PATH)
         cursor = conn.cursor()
         
@@ -748,19 +632,6 @@ class DatabaseManager:
                 UNIQUE(intern_id, att_date)
             );
 
-            CREATE TABLE IF NOT EXISTS performance_reviews (
-                review_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                intern_id INTEGER NOT NULL REFERENCES interns(intern_id),
-                mentor_id INTEGER NOT NULL REFERENCES mentors(mentor_id),
-                review_date TEXT NOT NULL,
-                week_number INTEGER NOT NULL,
-                technical_rating REAL NOT NULL,
-                softskills_rating REAL NOT NULL,
-                feedback TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(intern_id, week_number)
-            );
-
             CREATE TABLE IF NOT EXISTS stipend_payments (
                 payment_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 intern_id INTEGER NOT NULL REFERENCES interns(intern_id),
@@ -776,17 +647,6 @@ class DatabaseManager:
                 processed_date TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(intern_id, pay_month, pay_year)
-            );
-
-            CREATE TABLE IF NOT EXISTS audit_logs (
-                log_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                action_type TEXT NOT NULL,
-                table_name TEXT NOT NULL,
-                record_id INTEGER NOT NULL,
-                old_value TEXT,
-                new_value TEXT,
-                changed_by TEXT NOT NULL DEFAULT 'SYSTEM',
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
             -- Views
@@ -828,14 +688,11 @@ class DatabaseManager:
                 COUNT(t.task_id) AS total_tasks,
                 COUNT(CASE WHEN t.status = 'APPROVED' THEN 1 END) AS approved_tasks,
                 ROUND(COALESCE(AVG(CASE WHEN t.status = 'APPROVED' THEN t.score END), 0.0), 2) AS avg_task_score,
-                ROUND(COALESCE(AVG(pr.technical_rating), 0.0), 1) AS avg_tech_rating,
-                ROUND(COALESCE(AVG(pr.softskills_rating), 0.0), 1) AS avg_softskills_rating,
                 90.5 AS composite_performance_score
             FROM interns i
             JOIN departments d ON i.dept_id = d.dept_id
             LEFT JOIN mentors m ON i.mentor_id = m.mentor_id
             LEFT JOIN tasks t ON i.intern_id = t.intern_id
-            LEFT JOIN performance_reviews pr ON i.intern_id = pr.intern_id
             GROUP BY i.intern_id;
 
             -- Seed Departments
@@ -903,24 +760,11 @@ class DatabaseManager:
             (3, '2026-09-01', 'PRESENT', 9.0, 'Research lab'),
             (3, '2026-09-02', 'PRESENT', 9.0, 'Research lab');
 
-            -- Seed Reviews
-            INSERT INTO performance_reviews (review_id, intern_id, mentor_id, review_date, week_number, technical_rating, softskills_rating, feedback) VALUES
-            (1, 1, 1, '2026-08-08', 1, 4.2, 4.0, 'Good initial grasp of the database codebase.'),
-            (2, 1, 1, '2026-08-15', 2, 4.6, 4.5, 'Exceptional work on the normalization deliverable.'),
-            (3, 1, 1, '2026-08-22', 3, 4.5, 4.2, 'Proactive in asking clarifying questions on storage engines.'),
-            (4, 2, 1, '2026-08-08', 1, 4.0, 4.2, 'Quick learner. Understood the indexing requirements.'),
-            (5, 3, 3, '2026-08-15', 2, 4.9, 4.8, 'Top tier performance in streaming and schema design.');
-
             -- Seed Stipends
             INSERT INTO stipend_payments (payment_id, intern_id, pay_month, pay_year, days_present, total_working_days, calculated_stipend, bonus, deductions, net_amount, payment_status, processed_date) VALUES
             (1, 1, 8, 2026, 22, 22, 20000.00, 2000.00, 0.00, 22000.00, 'PROCESSED', '2026-08-31'),
             (2, 2, 8, 2026, 21, 22, 19090.91, 0.00, 0.00, 19090.91, 'PROCESSED', '2026-08-31'),
             (3, 3, 8, 2026, 22, 22, 25000.00, 2500.00, 0.00, 27500.00, 'PROCESSED', '2026-08-31');
-
-            -- Seed Audit Logs
-            INSERT INTO audit_logs (log_id, action_type, table_name, record_id, old_value, new_value, changed_by, timestamp) VALUES
-            (1, 'DATABASE_INIT', 'system', 0, NULL, 'Initialized InternHub schema & constraints', 'DBA_ADMIN', '2026-08-01 09:00:00'),
-            (2, 'STATUS_CHANGE', 'interns', 1, 'Status: APPLIED', 'Status: ACTIVE', 'HR_ADMIN', '2026-08-01 09:30:00');
         """)
         self._create_and_seed_users_sqlite(cursor)
         conn.commit()

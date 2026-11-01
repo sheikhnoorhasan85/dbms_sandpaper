@@ -21,45 +21,19 @@ DETERMINISTIC
 READS SQL DATA
 BEGIN
     DECLARE v_avg_task_score DECIMAL(5, 2) DEFAULT 0.00;
-    DECLARE v_avg_tech_rating DECIMAL(3, 1) DEFAULT 0.0;
-    DECLARE v_avg_soft_rating DECIMAL(3, 1) DEFAULT 0.0;
-    DECLARE v_mentor_score_100 DECIMAL(5, 2) DEFAULT 0.00;
-    DECLARE v_composite_score DECIMAL(5, 2) DEFAULT 0.00;
     DECLARE v_task_count INT DEFAULT 0;
-    DECLARE v_review_count INT DEFAULT 0;
 
-    -- 1. Calculate average task score from approved tasks (out of 100)
+    -- Calculate average task score from approved tasks (out of 100)
     SELECT COUNT(*), IFNULL(AVG(score), 0.00)
     INTO v_task_count, v_avg_task_score
     FROM tasks
     WHERE intern_id = p_intern_id AND status = 'APPROVED' AND score IS NOT NULL;
 
-    -- 2. Calculate average mentor rating (technical + soft skills on 1-5 scale)
-    SELECT COUNT(*), IFNULL(AVG(technical_rating), 0.0), IFNULL(AVG(softskills_rating), 0.0)
-    INTO v_review_count, v_avg_tech_rating, v_avg_soft_rating
-    FROM performance_reviews
-    WHERE intern_id = p_intern_id;
-
-    -- If no tasks and no reviews yet, return 0.00
-    IF v_task_count = 0 AND v_review_count = 0 THEN
+    IF v_task_count = 0 THEN
         RETURN 0.00;
     END IF;
 
-    -- Convert mentor rating (average of tech & soft) from 5-point to 100-point scale
-    IF v_review_count > 0 THEN
-        SET v_mentor_score_100 = ((v_avg_tech_rating + v_avg_soft_rating) / 2.0) * 20.0;
-    END IF;
-
-    -- Weighted formula: 60% task performance + 40% mentor evaluations
-    IF v_task_count > 0 AND v_review_count > 0 THEN
-        SET v_composite_score = (v_avg_task_score * 0.60) + (v_mentor_score_100 * 0.40);
-    ELSEIF v_task_count > 0 THEN
-        SET v_composite_score = v_avg_task_score;
-    ELSE
-        SET v_composite_score = v_mentor_score_100;
-    END IF;
-
-    RETURN ROUND(v_composite_score, 2);
+    RETURN ROUND(v_avg_task_score, 2);
 END$$
 DELIMITER ;
 
@@ -158,26 +132,6 @@ BEGIN
 END$$
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS trg_audit_intern_status_change;
-DELIMITER $$
-CREATE TRIGGER trg_audit_intern_status_change
-AFTER UPDATE ON interns
-FOR EACH ROW
-BEGIN
-    IF OLD.status != NEW.status THEN
-        INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-        VALUES (
-            'STATUS_CHANGE', 
-            'interns', 
-            NEW.intern_id, 
-            CONCAT('Status: ', OLD.status), 
-            CONCAT('Status: ', NEW.status),
-            CURRENT_USER()
-        );
-    END IF;
-END$$
-DELIMITER ;
-
 DROP TRIGGER IF EXISTS trg_validate_task_approval;
 DELIMITER $$
 CREATE TRIGGER trg_validate_task_approval
@@ -269,17 +223,6 @@ proc_body: BEGIN
     );
 
     SET p_new_intern_id = LAST_INSERT_ID();
-
-    -- Record in audit log
-    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-    VALUES (
-        'INSERT',
-        'interns',
-        p_new_intern_id,
-        NULL,
-        CONCAT('Onboarded: ', p_first_name, ' ', p_last_name, ' (Dept: ', p_dept_id, ')'),
-        CURRENT_USER()
-    );
 
     SET p_status_message = 'Success: Intern onboarded successfully.';
 END$$
@@ -419,17 +362,6 @@ proc_body: BEGIN
     SET status = 'COMPLETED'
     WHERE intern_id = p_intern_id;
 
-    -- Log completion in audit trail
-    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-    VALUES (
-        'INTERNSHIP_COMPLETION',
-        'interns',
-        p_intern_id,
-        CONCAT('Previous Status: ', v_current_status),
-        CONCAT('Completed with Final Score: ', p_final_score, '%'),
-        CURRENT_USER()
-    );
-
     IF v_pending_tasks = 0 THEN
         SET p_status_message = CONCAT('Success: Internship completed. Final Score: ', p_final_score, '%.');
     END IF;
@@ -437,59 +369,7 @@ END$$
 DELIMITER ;
 
 
--- Procedure 4: Supervisor Attendance Hours Adjustment with Audit Logging
-DROP PROCEDURE IF EXISTS sp_adjust_attendance_hours;
-DELIMITER $$
-CREATE PROCEDURE sp_adjust_attendance_hours(
-    IN p_att_id INT,
-    IN p_new_hours DECIMAL(4, 2),
-    IN p_reason VARCHAR(255),
-    IN p_supervisor_name VARCHAR(100),
-    OUT p_status_message VARCHAR(255)
-)
-proc_body: BEGIN
-    DECLARE v_old_hours DECIMAL(4, 2);
-    DECLARE v_intern_id INT;
-    DECLARE v_att_date DATE;
-
-    SELECT hours_logged, intern_id, att_date 
-    INTO v_old_hours, v_intern_id, v_att_date
-    FROM attendance 
-    WHERE att_id = p_att_id;
-
-    IF v_intern_id IS NULL THEN
-        SET p_status_message = 'Error: Attendance record not found.';
-        LEAVE proc_body;
-    END IF;
-
-    IF p_new_hours < 0.00 OR p_new_hours > 24.00 THEN
-        SET p_status_message = 'Error: Invalid working hours (must be between 0 and 24).';
-        LEAVE proc_body;
-    END IF;
-
-    -- Update attendance with authorized override tag in remarks to pass trigger check
-    UPDATE attendance
-    SET hours_logged = p_new_hours,
-        remarks = CONCAT(IFNULL(remarks, ''), ' [SUPERVISOR_OVERRIDE: Adjusted from ', v_old_hours, ' hrs to ', p_new_hours, ' hrs by ', p_supervisor_name, '. Reason: ', p_reason, ']')
-    WHERE att_id = p_att_id;
-
-    -- Record adjustment in audit_logs
-    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-    VALUES (
-        'ATTENDANCE_ADJUST',
-        'attendance',
-        p_att_id,
-        CONCAT('Intern #', v_intern_id, ' Hours: ', v_old_hours, ' on ', v_att_date),
-        CONCAT('Hours: ', p_new_hours, ' (Supervisor: ', p_supervisor_name, ', Reason: ', p_reason, ')'),
-        p_supervisor_name
-    );
-
-    SET p_status_message = 'Success: Attendance hours adjusted and audit log recorded.';
-END$$
-DELIMITER ;
-
-
--- Procedure 5: Atomic Self-Registration of Student User (Transactional)
+-- Procedure 4: Atomic Self-Registration of Student User (Transactional)
 DROP PROCEDURE IF EXISTS sp_register_student_user;
 DELIMITER $$
 CREATE PROCEDURE sp_register_student_user(
@@ -539,17 +419,6 @@ proc_body: BEGIN
     );
     SET p_new_user_id = LAST_INSERT_ID();
 
-    -- 3. Log user creation in audit trail
-    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
-    VALUES (
-        'USER_REGISTRATION',
-        'users',
-        p_new_user_id,
-        NULL,
-        CONCAT('Registered Student Intern: ', p_first_name, ' ', p_last_name, ' (Intern ID: #', v_new_intern_id, ')'),
-        'SELF_REGISTRATION'
-    );
-
     COMMIT;
     SET p_status_message = 'Success: Account created successfully! You can now sign in.';
 END$$
@@ -579,14 +448,11 @@ SELECT
     COUNT(t.task_id) AS total_tasks,
     COUNT(CASE WHEN t.status = 'APPROVED' THEN 1 END) AS approved_tasks,
     ROUND(IFNULL(AVG(CASE WHEN t.status = 'APPROVED' THEN t.score END), 0.00), 2) AS avg_task_score,
-    ROUND(IFNULL(AVG(pr.technical_rating), 0.00), 1) AS avg_tech_rating,
-    ROUND(IFNULL(AVG(pr.softskills_rating), 0.00), 1) AS avg_softskills_rating,
     fn_calculate_overall_score(i.intern_id) AS composite_performance_score
 FROM interns i
 JOIN departments d ON i.dept_id = d.dept_id
 LEFT JOIN mentors m ON i.mentor_id = m.mentor_id
 LEFT JOIN tasks t ON i.intern_id = t.intern_id
-LEFT JOIN performance_reviews pr ON i.intern_id = pr.intern_id
 GROUP BY 
     i.intern_id, i.first_name, i.last_name, i.email, i.college_name,
     d.dept_name, d.dept_code, m.first_name, m.last_name, m.designation,

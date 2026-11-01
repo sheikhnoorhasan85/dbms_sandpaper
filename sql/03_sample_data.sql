@@ -159,28 +159,7 @@ INSERT INTO attendance (intern_id, att_date, status, hours_logged, remarks) VALU
 (3, '2026-09-30', 'PRESENT', 9.0, 'Research lab');
 
 -- ----------------------------------------------------------------------------
--- 6. Seed Performance Reviews
--- ----------------------------------------------------------------------------
-INSERT INTO performance_reviews (review_id, intern_id, mentor_id, review_date, week_number, technical_rating, softskills_rating, feedback) VALUES
-(1, 1, 1, '2026-08-08', 1, 4.2, 4.0, 'Good initial grasp of the database codebase. Clear communication in team standups.'),
-(2, 1, 1, '2026-08-15', 2, 4.6, 4.5, 'Exceptional work on the normalization deliverable. Followed proper third normal form.'),
-(3, 1, 1, '2026-08-22', 3, 4.5, 4.2, 'Proactive in asking clarifying questions on storage engines.'),
-(4, 1, 1, '2026-08-29', 4, 4.8, 4.7, 'Outstanding stored procedure coding skills and error handling.'),
-
-(5, 2, 1, '2026-08-08', 1, 4.0, 4.2, 'Quick learner. Understood the indexing requirements effectively.'),
-(6, 2, 1, '2026-08-15', 2, 4.4, 4.3, 'Strong SQL query optimization demonstrated using EXPLAIN.'),
-(7, 2, 1, '2026-08-22', 3, 4.6, 4.5, 'Delivered clean trigger scripts with appropriate error signaling.'),
-
-(8, 3, 3, '2026-08-15', 2, 4.9, 4.8, 'Top tier performance in streaming and schema design.'),
-(9, 3, 3, '2026-08-29', 4, 4.8, 4.7, 'Consistently delivers ahead of schedule with production-grade quality.'),
-
-(10, 4, 4, '2026-08-22', 3, 4.2, 4.4, 'Very diligent and communicative data scientist intern.'),
-(11, 4, 4, '2026-09-05', 5, 4.5, 4.6, 'Data cleaning scripts were well structured and documented.'),
-
-(12, 9, 2, '2026-07-28', 12, 5.0, 5.0, 'Outstanding summer performance. Fully completed all milestones with distinction.');
-
--- ----------------------------------------------------------------------------
--- 7. Seed Stipend Payments (Historical records)
+-- 6. Seed Stipend Payments (Historical records)
 -- ----------------------------------------------------------------------------
 INSERT INTO stipend_payments (payment_id, intern_id, pay_month, pay_year, days_present, total_working_days, calculated_stipend, bonus, deductions, net_amount, payment_status, processed_date) VALUES
 (1, 1, 8, 2026, 22, 22, 20000.00, 2000.00, 0.00, 22000.00, 'PROCESSED', '2026-08-31'),
@@ -190,17 +169,7 @@ INSERT INTO stipend_payments (payment_id, intern_id, pay_month, pay_year, days_p
 (5, 10, 7, 2026, 22, 22, 20000.00, 1500.00, 0.00, 21500.00, 'PROCESSED', '2026-07-31');
 
 -- ----------------------------------------------------------------------------
--- 8. Seed Audit Logs
--- ----------------------------------------------------------------------------
-INSERT INTO audit_logs (log_id, action_type, table_name, record_id, old_value, new_value, changed_by, timestamp) VALUES
-(1, 'DATABASE_INIT', 'system', 0, NULL, 'Initialized InternHub database schema and constraints', 'DBA_ADMIN', '2026-08-01 09:00:00'),
-(2, 'STATUS_CHANGE', 'interns', 1, 'Status: APPLIED', 'Status: ACTIVE', 'HR_ADMIN', '2026-08-01 09:30:00'),
-(3, 'STATUS_CHANGE', 'interns', 2, 'Status: APPLIED', 'Status: ACTIVE', 'HR_ADMIN', '2026-08-01 09:35:00'),
-(4, 'STATUS_CHANGE', 'interns', 9, 'Status: ACTIVE', 'Status: COMPLETED', 'SYSTEM', '2026-07-31 17:00:00'),
-(5, 'STATUS_CHANGE', 'interns', 10, 'Status: ACTIVE', 'Status: COMPLETED', 'SYSTEM', '2026-07-31 17:05:00');
-
--- ----------------------------------------------------------------------------
--- 9. Seed Users (Database Authentication)
+-- 7. Seed Users (Database Authentication)
 -- Passwords:
 -- 'admin123'    -> 240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9
 -- 'password123' -> ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f
@@ -218,7 +187,4 @@ INSERT INTO users (user_id, email, password_hash, role, reference_id, full_name,
 -- Intern Accounts (reference_id links to intern_id)
 (6, 'aarav.shah@example.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'INTERN', 1, 'Aarav Shah', TRUE),
 (7, 'diya.joshi@example.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'INTERN', 2, 'Diya Joshi', TRUE),
-(8, 'rohan.verma@example.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'INTERN', 3, 'Rohan Verma', TRUE),
-
--- Evaluator / Professor Account
-(9, 'evaluator@svnit.ac.in', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'EVALUATOR', NULL, 'Lab Evaluator (SVNIT)', TRUE);
+(8, 'rohan.verma@example.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'INTERN', 3, 'Rohan Verma', TRUE);

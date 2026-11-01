@@ -37,9 +37,7 @@ def test_schema_syntax_and_tables():
         "interns",
         "tasks",
         "attendance",
-        "performance_reviews",
         "stipend_payments",
-        "audit_logs",
         "users"
     ]
 
@@ -49,7 +47,7 @@ def test_schema_syntax_and_tables():
         assert match, f"Table creation for '{table}' not found in 01_schema.sql"
         print(f"    ✓ Table definition confirmed: {table}")
 
-    print("✓ All 9 tables correctly defined with InnoDB engine and primary keys.\n")
+    print("✓ All 7 tables correctly defined with InnoDB engine and primary keys.\n")
 
 def test_routines_syntax():
     print("--> Performing static analysis on 02_routines.sql...")
@@ -61,13 +59,11 @@ def test_routines_syntax():
         ("FUNCTION", "fn_calculate_attendance_rate"),
         ("TRIGGER", "trg_prevent_mentor_overload_insert"),
         ("TRIGGER", "trg_prevent_mentor_overload_update"),
-        ("TRIGGER", "trg_audit_intern_status_change"),
         ("TRIGGER", "trg_validate_task_approval"),
         ("TRIGGER", "trg_prevent_attendance_tampering"),
         ("PROCEDURE", "sp_onboard_intern"),
         ("PROCEDURE", "sp_generate_monthly_stipend"),
         ("PROCEDURE", "sp_complete_internship"),
-        ("PROCEDURE", "sp_adjust_attendance_hours"),
         ("PROCEDURE", "sp_register_student_user"),
         ("VIEW", "vw_intern_master_summary"),
         ("VIEW", "vw_mentor_workload")
@@ -118,7 +114,7 @@ def test_auth_and_tampering_protection():
     print("    ✓ Invalid password rejected by authentication")
 
     # 3. Test Student Attendance Tampering Protection
-    # Direct update to hours without supervisor override must be blocked
+    # Direct update to hours must be blocked
     tamper_blocked = False
     try:
         db.execute_dml("UPDATE attendance SET hours_logged = 12.0 WHERE att_id = 1")
@@ -128,12 +124,7 @@ def test_auth_and_tampering_protection():
     assert tamper_blocked, "Student attendance tampering was NOT blocked!"
     print("    ✓ Attendance tampering trigger verified (direct student edits rejected)")
 
-    # 4. Test Authorized Supervisor Override
-    ok, msg = db.adjust_attendance_hours(1, 8.5, "Standard verified schedule", "Dr. Rajesh Sharma")
-    assert ok, f"Supervisor attendance adjustment failed: {msg}"
-    print("    ✓ Supervisor override routine (sp_adjust_attendance_hours) verified")
-
-    # 5. Test Student User Registration (Transactional Stored Program)
+    # 4. Test Student User Registration (Transactional Stored Program)
     test_email = "test.student@example.com"
     # Delete test user if exists from prior run
     db.execute_dml("DELETE FROM users WHERE email = ?", (test_email,))
@@ -154,7 +145,7 @@ def test_auth_and_tampering_protection():
     assert new_auth["role"] == "INTERN", "New user role mismatch"
     print("    ✓ Newly registered student authenticated successfully via users table")
 
-    # 6. Test Intern Selecting Preferred Mentor
+    # 5. Test Intern Selecting Preferred Mentor
     new_intern_id = new_auth["reference_id"]
     pref_ok, pref_msg = db.set_intern_preferred_mentor(new_intern_id, 2, "Test Student")
     assert pref_ok, f"Setting preferred mentor failed: {pref_msg}"
@@ -163,7 +154,7 @@ def test_auth_and_tampering_protection():
     assert df_pref.iloc[0]["status"] == "APPLIED", "Status should remain APPLIED before admin approval"
     print("    ✓ Intern mentor preference selection verified (status remains APPLIED)")
 
-    # 7. Test Admin Verification and Mentor Allocation
+    # 6. Test Admin Verification and Mentor Allocation
     ver_ok, ver_msg = db.verify_and_allocate_intern(new_intern_id, 2, 18000.0, "Dr. Admin")
     assert ver_ok, f"Admin intern verification failed: {ver_msg}"
     df_check = db.execute_query("SELECT status, mentor_id, base_stipend FROM interns WHERE intern_id = ?", (new_intern_id,))

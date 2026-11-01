@@ -125,35 +125,7 @@ CREATE TABLE attendance (
 ) ENGINE=InnoDB;
 
 -- ----------------------------------------------------------------------------
--- 6. Table: performance_reviews
--- Weekly evaluations conducted by mentors grading technical and soft skills
--- ----------------------------------------------------------------------------
-CREATE TABLE performance_reviews (
-    review_id INT AUTO_INCREMENT PRIMARY KEY,
-    intern_id INT NOT NULL,
-    mentor_id INT NOT NULL,
-    review_date DATE NOT NULL,
-    week_number INT NOT NULL,
-    technical_rating DECIMAL(3, 1) NOT NULL,
-    softskills_rating DECIMAL(3, 1) NOT NULL,
-    feedback TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_reviews_intern FOREIGN KEY (intern_id) 
-        REFERENCES interns(intern_id) 
-        ON UPDATE CASCADE 
-        ON DELETE CASCADE,
-    CONSTRAINT fk_reviews_mentor FOREIGN KEY (mentor_id) 
-        REFERENCES mentors(mentor_id) 
-        ON UPDATE CASCADE 
-        ON DELETE RESTRICT,
-    CONSTRAINT uk_intern_weekly_review UNIQUE (intern_id, week_number),
-    CONSTRAINT chk_review_week CHECK (week_number >= 1 AND week_number <= 52),
-    CONSTRAINT chk_tech_rating CHECK (technical_rating >= 1.0 AND technical_rating <= 5.0),
-    CONSTRAINT chk_soft_rating CHECK (softskills_rating >= 1.0 AND softskills_rating <= 5.0)
-) ENGINE=InnoDB;
-
--- ----------------------------------------------------------------------------
--- 7. Table: stipend_payments
+-- 6. Table: stipend_payments
 -- Monthly stipend billing records computed from attendance and base compensation
 -- ----------------------------------------------------------------------------
 CREATE TABLE stipend_payments (
@@ -183,34 +155,19 @@ CREATE TABLE stipend_payments (
 ) ENGINE=InnoDB;
 
 -- ----------------------------------------------------------------------------
--- 8. Table: audit_logs
--- System audit trail logging state transitions, triggers, and automated updates
--- ----------------------------------------------------------------------------
-CREATE TABLE audit_logs (
-    log_id INT AUTO_INCREMENT PRIMARY KEY,
-    action_type VARCHAR(20) NOT NULL,
-    table_name VARCHAR(50) NOT NULL,
-    record_id INT NOT NULL,
-    old_value TEXT NULL,
-    new_value TEXT NULL,
-    changed_by VARCHAR(100) NOT NULL DEFAULT 'SYSTEM',
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-
--- ----------------------------------------------------------------------------
--- 9. Table: users
+-- 7. Table: users
 -- Secure user authentication table with roles and foreign key references
 -- ----------------------------------------------------------------------------
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(64) NOT NULL,
-    role ENUM('ADMIN', 'MENTOR', 'INTERN', 'EVALUATOR') NOT NULL,
+    role ENUM('ADMIN', 'MENTOR', 'INTERN') NOT NULL,
     reference_id INT NULL, -- references mentor_id if MENTOR, intern_id if INTERN
     full_name VARCHAR(100) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_user_role CHECK (role IN ('ADMIN', 'MENTOR', 'INTERN', 'EVALUATOR'))
+    CONSTRAINT chk_user_role CHECK (role IN ('ADMIN', 'MENTOR', 'INTERN'))
 ) ENGINE=InnoDB;
 
 -- ============================================================================
@@ -225,8 +182,6 @@ CREATE INDEX idx_interns_mentor ON interns(mentor_id);
 CREATE INDEX idx_tasks_intern ON tasks(intern_id);
 CREATE INDEX idx_tasks_mentor ON tasks(assigned_by);
 CREATE INDEX idx_attendance_intern ON attendance(intern_id);
-CREATE INDEX idx_reviews_intern ON performance_reviews(intern_id);
-CREATE INDEX idx_reviews_mentor ON performance_reviews(mentor_id);
 CREATE INDEX idx_stipend_intern ON stipend_payments(intern_id);
 CREATE INDEX idx_users_email_role ON users(email, role);
 
@@ -235,4 +190,3 @@ CREATE INDEX idx_interns_status ON interns(status);
 CREATE INDEX idx_tasks_deadline_status ON tasks(deadline, status);
 CREATE INDEX idx_attendance_date ON attendance(att_date);
 CREATE INDEX idx_stipend_period ON stipend_payments(pay_year, pay_month, payment_status);
-CREATE INDEX idx_audit_table_record ON audit_logs(table_name, record_id);
