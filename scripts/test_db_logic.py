@@ -154,6 +154,23 @@ def test_auth_and_tampering_protection():
     assert new_auth["role"] == "INTERN", "New user role mismatch"
     print("    ✓ Newly registered student authenticated successfully via users table")
 
+    # 6. Test Intern Selecting Preferred Mentor
+    new_intern_id = new_auth["reference_id"]
+    pref_ok, pref_msg = db.set_intern_preferred_mentor(new_intern_id, 2, "Test Student")
+    assert pref_ok, f"Setting preferred mentor failed: {pref_msg}"
+    df_pref = db.execute_query("SELECT mentor_id, status FROM interns WHERE intern_id = ?", (new_intern_id,))
+    assert df_pref.iloc[0]["mentor_id"] == 2, "Preferred mentor ID not updated"
+    assert df_pref.iloc[0]["status"] == "APPLIED", "Status should remain APPLIED before admin approval"
+    print("    ✓ Intern mentor preference selection verified (status remains APPLIED)")
+
+    # 7. Test Admin Verification and Mentor Allocation
+    ver_ok, ver_msg = db.verify_and_allocate_intern(new_intern_id, 2, 18000.0, "Dr. Admin")
+    assert ver_ok, f"Admin intern verification failed: {ver_msg}"
+    df_check = db.execute_query("SELECT status, mentor_id, base_stipend FROM interns WHERE intern_id = ?", (new_intern_id,))
+    assert df_check.iloc[0]["status"] == "ACTIVE", "Intern status not updated to ACTIVE"
+    assert df_check.iloc[0]["mentor_id"] == 2, "Mentor not allocated correctly"
+    print("    ✓ Admin verification and mentor allocation workflow verified")
+
     print("✓ Authentication & Protection mechanisms 100% functional.\n")
 
 if __name__ == "__main__":

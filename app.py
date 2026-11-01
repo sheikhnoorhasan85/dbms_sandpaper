@@ -280,6 +280,19 @@ if not st.session_state.authenticated:
                 reg_clg = st.text_input("University / Institute *", value="SVNIT Surat")
                 reg_dept = st.selectbox("Department *", [1, 2, 3, 4, 5], format_func=lambda x: f"Dept #{x}: {['CSE','AIDS','ECE','IT','ROBO'][x-1]}")
 
+                # Optional initial mentor preference
+                df_reg_mentors = run_db_query("SELECT mentor_id, (first_name || ' ' || last_name) AS name, designation, dept_id FROM mentors")
+                reg_mentor_choices = [("None", "Decide Later in Student Dashboard (Recommended)")]
+                if not df_reg_mentors.empty:
+                    for _, rm in df_reg_mentors.iterrows():
+                        reg_mentor_choices.append((str(rm['mentor_id']), f"Mentor #{rm['mentor_id']}: {rm['name']} ({rm['designation']})"))
+
+                selected_reg_mentor = st.selectbox(
+                    "Preferred Faculty Mentor (Optional):",
+                    options=[c[0] for c in reg_mentor_choices],
+                    format_func=lambda x: dict(reg_mentor_choices)[x]
+                )
+
                 rc3, rc4 = st.columns(2)
                 with rc3:
                     reg_em = st.text_input("Student Email *", placeholder="e.g. yash.t@example.com")
@@ -304,8 +317,9 @@ if not st.session_state.authenticated:
                     elif reg_p1 != reg_p2:
                         st.error("Passwords do not match. Please re-enter carefully.")
                     else:
+                        pref_m_id = None if selected_reg_mentor == "None" else int(selected_reg_mentor)
                         ok, msg = st.session_state.db_manager.register_student_user(
-                            reg_fn, reg_ln, reg_em, reg_ph, reg_clg, reg_dept, reg_p1
+                            reg_fn, reg_ln, reg_em, reg_ph, reg_clg, reg_dept, reg_p1, pref_m_id
                         )
                         if ok:
                             st.success(f"{msg}")
@@ -376,7 +390,7 @@ else:
     if role == "admin":
         tab_admin1, tab_admin2, tab_admin3, tab_admin4, tab_admin5, tab_admin6 = st.tabs([
             "📊 Executive Dashboard", 
-            "➕ Onboard Intern (Stored Procedure)", 
+            "➕ Verify & Onboard Interns", 
             "💰 Monthly Stipend Run (Cursor)", 
             "👥 Faculty Mentors & Quotas", 
             "🛠️ Attendance Corrections (Override)",
@@ -416,7 +430,103 @@ else:
             st.dataframe(df_interns, use_container_width=True)
 
         with tab_admin2:
-            st.markdown("#### Atomic Onboarding via Stored Procedure (`sp_onboard_intern`)")
+            st.markdown("#### 📋 Verify Student Registrations & Onboard Interns")
+            st.caption("Review self-registered student applications, allocate faculty mentors (verifying quotas), or onboard interns directly.")
+
+            # Sub-section 1: Pending Self-Registrations
+            df_pending = run_db_query("""
+                SELECT i.intern_id, (i.first_name || ' ' || i.last_name) AS student_name, 
+                       i.email, i.phone, i.college_name, d.dept_name, i.dept_id, i.mentor_id,
+                       IFNULL(m.first_name || ' ' || m.last_name, 'Not Selected') AS requested_mentor,
+                       IFNULL(m.designation, '') AS requested_mentor_title,
+                       i.status
+                FROM interns i
+                JOIN departments d ON i.dept_id = d.dept_id
+                LEFT JOIN mentors m ON i.mentor_id = m.mentor_id
+                WHERE i.status = 'APPLIED'
+                ORDER BY i.intern_id DESC
+            """)
+
+            st.markdown("##### 1. Pending Student Self-Registrations Awaiting Verification")
+            if not df_pending.empty:
+                st.warning(f"🔔 **{len(df_pending)} student application(s) awaiting verification and mentor allocation.**")
+                disp_cols = ['intern_id', 'student_name', 'email', 'college_name', 'dept_name', 'requested_mentor']
+                st.dataframe(df_pending[disp_cols], use_container_width=True)
+
+                with st.form("verify_student_app_form"):
+                    st.markdown("###### Verify & Assign Faculty Mentor")
+                    app_map = {
+                        f"#{r['intern_id']}: {r['student_name']} ({r['dept_name']} • Pref: {r['requested_mentor']})": {
+                            "id": r['intern_id'],
+                            "name": r['student_name'],
+                            "pref_id": r['mentor_id'],
+                            "pref_name": r['requested_mentor'],
+                            "pref_title": r['requested_mentor_title']
+                        }
+                        for _, r in df_pending.iterrows()
+                    }
+                    selected_app_label = st.selectbox("Select Pending Student:", list(app_map.keys()))
+                    selected_info = app_map[selected_app_label]
+                    selected_intern_id = selected_info["id"]
+
+                    if selected_info["pref_id"] is not None:
+                        st.info(f"💡 **Student's Requested Preference:** Mentor #{selected_info['pref_id']} — {selected_info['pref_name']} ({selected_info['pref_title']})")
+                    else:
+                        st.caption("ℹ️ This student has not chosen a preferred mentor yet. You can assign any available faculty mentor.")
+
+                    # Mentors list with open capacity slots from vw_mentor_workload
+                    df_mentors_wl = run_db_query("SELECT mentor_id, mentor_name, designation, dept_name, slots_available, max_capacity FROM vw_mentor_workload")
+                    mentor_options = {}
+                    default_idx = 0
+                    m_idx = 0
+                    for _, r in df_mentors_wl.iterrows():
+                        slots_txt = f"{r['slots_available']} slots open" if r['slots_available'] > 0 else "FULL"
+                        is_pref = " ⭐ [STUDENT'S CHOICE]" if selected_info["pref_id"] == r['mentor_id'] else ""
+                        lbl = f"Mentor #{r['mentor_id']}: {r['mentor_name']} ({r['dept_name']} • {slots_txt}){is_pref}"
+                        mentor_options[lbl] = r['mentor_id']
+                        if selected_info["pref_id"] == r['mentor_id']:
+                            default_idx = m_idx
+                        m_idx += 1
+
+                    selected_mentor_label = st.selectbox(
+                        "Assign Faculty Mentor (Quota Checked):",
+                        options=list(mentor_options.keys()),
+                        index=default_idx
+                    )
+                    selected_mentor_id = mentor_options[selected_mentor_label]
+
+                    alloc_stipend = st.number_input("Approved Monthly Base Stipend (₹):", value=15000.0, step=1000.0)
+
+                    col_v1, col_v2 = st.columns(2)
+                    with col_v1:
+                        btn_approve = st.form_submit_button("Verify & Allocate Mentor ✅", use_container_width=True)
+                    with col_v2:
+                        btn_reject = st.form_submit_button("Reject Application ❌", use_container_width=True)
+
+                    if btn_approve:
+                        ok, msg = st.session_state.db_manager.verify_and_allocate_intern(
+                            selected_intern_id, selected_mentor_id, alloc_stipend, profile['name']
+                        )
+                        if ok:
+                            st.success(msg)
+                            st.rerun()
+                        else:
+                            st.error(f"Approval Failed (Database Constraint / Quota): {msg}")
+
+                    if btn_reject:
+                        ok, msg = st.session_state.db_manager.reject_intern_application(
+                            selected_intern_id, "Incomplete or unverified academic documentation", profile['name']
+                        )
+                        if ok:
+                            st.warning(msg)
+                            st.rerun()
+                        else:
+                            st.error(f"Rejection Failed: {msg}")
+            else:
+                st.info("✅ All student registrations are verified! No pending applications.")
+
+            st.markdown("---")
+            st.markdown("##### 2. Direct Onboarding via Stored Procedure (`sp_onboard_intern`)")
             st.caption("Validates department and mentor quota triggers at the database level before inserting.")
 
             with st.form("admin_onboard_form"):
@@ -673,9 +783,20 @@ else:
             df_me = run_db_query("SELECT * FROM vw_intern_master_summary WHERE intern_id = ?", (i_id,), fallback_func=mock_data.get_mock_interns)
             if not df_me.empty:
                 me = df_me.iloc[0]
+                status_val = str(me.get("status", "ACTIVE"))
+                pref_mentor = str(me.get("mentor_name", "Unassigned"))
+
+                if status_val == "APPLIED":
+                    if pref_mentor != "Unassigned":
+                        st.success(f"⏳ **Mentor Preference Submitted:** You have requested **{pref_mentor}** ({me.get('mentor_designation', '')}). Your application is currently awaiting Admin verification & quota approval.")
+                    else:
+                        st.warning("⚠️ **Action Required: Choose Your Preferred Faculty Mentor.** Please review the available research supervisors below and select your preferred mentor to proceed with your application.")
+                elif status_val == "TERMINATED":
+                    st.error("❌ **Application Inactive / Rejected:** Please contact the incubation office for details.")
+
                 c1, c2, c3, c4 = st.columns(4)
-                c1.metric("Status", str(me.get("status", "ACTIVE")), "Enrolled")
-                c2.metric("Faculty Mentor", str(me.get("mentor_name", "Unassigned")))
+                c1.metric("Status", status_val, "Enrolled" if status_val == "ACTIVE" else "Pending Review")
+                c2.metric("Faculty Mentor", pref_mentor, "Assigned" if status_val == "ACTIVE" else "Preference")
                 c3.metric("Base Stipend", f"₹ {float(me.get('base_stipend', 0)):,.2f}")
                 c4.metric("Performance Score", f"{float(me.get('composite_performance_score', 90.0)):.1f}%", "Weighted Formula")
                 
@@ -683,6 +804,65 @@ else:
                 st.write(f"**Department:** {me.get('dept_name', 'Computer Science & Engineering')}")
                 st.write(f"**Institution:** {me.get('college_name', 'SVNIT Surat')}")
                 st.write(f"**Duration:** {me.get('start_date')} to {me.get('end_date')}")
+
+                # If status is APPLIED, show the Options Available for the Intern
+                if status_val == "APPLIED":
+                    st.markdown("---")
+                    st.markdown("### 🎯 Explore Mentorship Options Available for You")
+                    st.caption("Browse faculty mentors, their research specializations, and current capacity slots. Choose your preferred supervisor for Admin approval:")
+
+                    df_all_mentors = run_db_query("""
+                        SELECT mentor_id, mentor_name, dept_name, designation, 
+                               max_capacity, current_active_interns, slots_available, capacity_status
+                        FROM vw_mentor_workload
+                        ORDER BY dept_name, mentor_id
+                    """)
+
+                    if not df_all_mentors.empty:
+                        m_cols = st.columns(2)
+                        for idx, (_, rm) in enumerate(df_all_mentors.iterrows()):
+                            with m_cols[idx % 2]:
+                                if rm['slots_available'] > 0:
+                                    slot_badge = f"<span style='color: #15803D; font-weight: 600;'>🟢 {rm['slots_available']} of {rm['max_capacity']} Slots Available</span>"
+                                else:
+                                    slot_badge = "<span style='color: #B91C1C; font-weight: 600;'>🔴 Quota Full (0 Slots Open)</span>"
+
+                                is_current_pick = f"<span style='background: #FEF3C7; color: #92400E; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;'>YOUR CURRENT PICK</span>" if pref_mentor == rm['mentor_name'] else ""
+
+                                st.markdown(f"""
+                                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="font-weight: 700; color: #0F172A; font-size: 0.95rem;">👨‍🏫 {rm['mentor_name']}</div>
+                                        {is_current_pick}
+                                    </div>
+                                    <div style="font-size: 0.82rem; color: #475569; margin-top: 2px;"><b>Designation:</b> {rm['designation']}</div>
+                                    <div style="font-size: 0.82rem; color: #475569;"><b>Department:</b> {rm['dept_name']}</div>
+                                    <div style="font-size: 0.82rem; margin-top: 6px;">{slot_badge}</div>
+                                </div>
+                                """, unsafe_allow_html=True)
+
+                        st.markdown("##### 📝 Submit / Update Your Mentor Preference")
+                        with st.form("intern_choose_mentor_form"):
+                            m_choice_dict = {}
+                            for _, rm in df_all_mentors.iterrows():
+                                slots_note = f"({rm['slots_available']} open slots)" if rm['slots_available'] > 0 else "(Full - waitlist)"
+                                lbl = f"Mentor #{rm['mentor_id']}: {rm['mentor_name']} — {rm['dept_name']} {slots_note}"
+                                m_choice_dict[lbl] = rm['mentor_id']
+
+                            sel_lbl = st.selectbox("Select Preferred Faculty Mentor:", list(m_choice_dict.keys()))
+                            sel_m_id = m_choice_dict[sel_lbl]
+                            project_interest = st.text_input("Area of Interest / Learning Objective (Optional):", placeholder="e.g. Relational indexing, Distributed DBMS, Microservices")
+
+                            submit_pref = st.form_submit_button("Submit Mentor Preference 🎯", use_container_width=True)
+                            if submit_pref:
+                                ok, msg = st.session_state.db_manager.set_intern_preferred_mentor(
+                                    i_id, sel_m_id, profile['name']
+                                )
+                                if ok:
+                                    st.success(f"{msg}")
+                                    st.rerun()
+                                else:
+                                    st.error(f"Error submitting preference: {msg}")
             else:
                 st.info("Loading student profile...")
 
@@ -690,43 +870,50 @@ else:
             st.markdown("#### 📅 Daily Working Time & Attendance")
             st.caption("Institutional Rule: Working hours can only be logged for today and are strictly immutable once recorded.")
 
-            today_date = datetime.date.today()
-            today_str = today_date.isoformat()
+            df_status = run_db_query("SELECT status FROM interns WHERE intern_id = ?", (i_id,))
+            current_status = df_status.iloc[0]['status'] if not df_status.empty else 'ACTIVE'
 
-            # Check if attendance for today already exists in DB
-            df_today = run_db_query(
-                "SELECT att_id, att_date, status, hours_logged, remarks FROM attendance WHERE intern_id = ? AND att_date = ?",
-                (i_id, today_str)
-            )
-
-            if not df_today.empty:
-                today_record = df_today.iloc[0]
-                st.success(f"🔒 **Today's Attendance Recorded & Locked ({today_str})**")
-                
-                c_t1, c_t2, c_t3 = st.columns(3)
-                c_t1.metric("Status", str(today_record.get('status', 'PRESENT')))
-                c_t2.metric("Working Hours Logged", f"{float(today_record.get('hours_logged', 8.0)):.1f} hrs")
-                c_t3.metric("Policy Status", "Locked (Immutable)", "Tamper Protected")
-                
-                if today_record.get('remarks'):
-                    st.info(f"**Remarks:** {today_record.get('remarks')}")
-
-                st.warning("⚠️ **Policy Notice**: Students cannot modify their working hours or attendance date once recorded. If an error occurred or an adjustment is required, please contact your faculty mentor or HR administrator.")
+            if current_status == 'APPLIED':
+                st.info("⏳ **Verification Required:** Attendance logging will unlock once the administrator verifies your application and assigns your Faculty Mentor.")
             else:
-                st.markdown(f"##### Log Attendance for Today: **{today_date.strftime('%A, %B %d, %Y')}**")
-                with st.form("intern_att_form"):
-                    st.text_input("Calendar Date (Locked to Today)", value=today_str, disabled=True)
-                    att_st = st.selectbox("Attendance Status", ["PRESENT", "WORK_FROM_HOME", "ON_LEAVE", "ABSENT"])
-                    att_hrs = st.slider("Hours Worked Today (0.0 - 12.0)", 0.0, 12.0, 8.0, 0.5)
-                    att_rmk = st.text_input("Daily Work Summary / Activity Log", "Worked on database assignment modules")
+                today_date = datetime.date.today()
+                today_str = today_date.isoformat()
 
-                    if st.form_submit_button("Record Today's Attendance 📅", use_container_width=True):
-                        try:
-                            q = "INSERT INTO attendance (intern_id, att_date, status, hours_logged, remarks) VALUES (?, ?, ?, ?, ?)"
-                            st.session_state.db_manager.execute_dml(q, (i_id, today_str, att_st, att_hrs, att_rmk))
-                            st.success(f"Attendance recorded for {today_str} as {att_st} ({att_hrs} hrs)! Record is now locked.")
-                            st.rerun()
-                        except Exception as ex:
+                # Check if attendance for today already exists in DB
+                df_today = run_db_query(
+                    "SELECT att_id, att_date, status, hours_logged, remarks FROM attendance WHERE intern_id = ? AND att_date = ?",
+                    (i_id, today_str)
+                )
+
+                if not df_today.empty:
+                    today_record = df_today.iloc[0]
+                    st.success(f"🔒 **Today's Attendance Recorded & Locked ({today_str})**")
+                    
+                    c_t1, c_t2, c_t3 = st.columns(3)
+                    c_t1.metric("Status", str(today_record.get('status', 'PRESENT')))
+                    c_t2.metric("Working Hours Logged", f"{float(today_record.get('hours_logged', 8.0)):.1f} hrs")
+                    c_t3.metric("Policy Status", "Locked (Immutable)", "Tamper Protected")
+                    
+                    if today_record.get('remarks'):
+                        st.info(f"**Remarks:** {today_record.get('remarks')}")
+
+                    st.warning("⚠️ **Policy Notice**: Students cannot modify their working hours or attendance date once recorded. If an error occurred or an adjustment is required, please contact your faculty mentor or HR administrator.")
+                else:
+                    st.markdown(f"##### Log Attendance for Today: **{today_date.strftime('%A, %B %d, %Y')}**")
+                    with st.form("intern_att_form"):
+                        st.text_input("Calendar Date (Locked to Today)", value=today_str, disabled=True)
+                        att_st = st.selectbox("Attendance Status", ["PRESENT", "WORK_FROM_HOME", "ON_LEAVE", "ABSENT"])
+                        att_hrs = st.slider("Hours Worked Today (0.0 - 12.0)", 0.0, 12.0, 8.0, 0.5)
+                        att_rmk = st.text_input("Daily Work Summary / Activity Log", "Worked on database assignment modules")
+
+                        if st.form_submit_button("Record Today's Attendance 📅", use_container_width=True):
+                            try:
+                                q = "INSERT INTO attendance (intern_id, att_date, status, hours_logged, remarks) VALUES (?, ?, ?, ?, ?)"
+                                st.session_state.db_manager.execute_dml(q, (i_id, today_str, att_st, att_hrs, att_rmk))
+                                st.success(f"Attendance recorded for {today_str} as {att_st} ({att_hrs} hrs)! Record is now locked.")
+                                st.rerun()
+                            except Exception as ex:
+                                st.error(f"Database Validation Error: {ex}")
                             st.error(f"Database Validation Error: {ex}")
 
             st.markdown("---")

@@ -425,7 +425,8 @@ class DatabaseManager:
                 conn.close()
 
     def register_student_user(self, first_name: str, last_name: str, email: str,
-                              phone: str, college: str, dept_id: int, password: str) -> Tuple[bool, str]:
+                              phone: str, college: str, dept_id: int, password: str,
+                              preferred_mentor_id: Optional[int] = None) -> Tuple[bool, str]:
         """Registers a new student user atomically into both interns and users tables with SHA-256."""
         if not first_name.strip() or not last_name.strip() or not email.strip() or not password.strip():
             return False, "Error: All required fields must be filled."
@@ -442,6 +443,13 @@ class DatabaseManager:
                 args = [first_name.strip(), last_name.strip(), clean_email, phone.strip(), college.strip(), dept_id, pwd_hash, 0, ""]
                 res = cursor.callproc("sp_register_student_user", args)
                 status_msg = res[8]
+                new_user_id = res[7]
+                if "Success" in status_msg and preferred_mentor_id:
+                    cursor.execute("SELECT reference_id FROM users WHERE user_id = %s", (new_user_id,))
+                    u_row = cursor.fetchone()
+                    if u_row and u_row[0]:
+                        cursor.execute("UPDATE interns SET mentor_id = %s WHERE intern_id = %s", (preferred_mentor_id, u_row[0]))
+                        conn.commit()
                 cursor.close()
                 if "Success" in status_msg:
                     return True, status_msg
@@ -462,8 +470,8 @@ class DatabaseManager:
                     INSERT INTO interns (
                         first_name, last_name, email, phone, college_name,
                         dept_id, mentor_id, start_date, end_date, base_stipend, status
-                    ) VALUES (?, ?, ?, ?, ?, ?, NULL, DATE('now'), DATE('now', '+90 days'), 15000.0, 'APPLIED')
-                """, (first_name.strip(), last_name.strip(), clean_email, phone.strip(), college.strip(), dept_id))
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, DATE('now'), DATE('now', '+90 days'), 15000.0, 'APPLIED')
+                """, (first_name.strip(), last_name.strip(), clean_email, phone.strip(), college.strip(), dept_id, preferred_mentor_id))
                 new_intern_id = cursor.lastrowid
 
                 cursor.execute("""
@@ -481,11 +489,149 @@ class DatabaseManager:
                     "users",
                     new_user_id,
                     None,
-                    f"Registered Student Intern: {first_name.strip()} {last_name.strip()} (Intern ID: #{new_intern_id})",
+                    f"Registered Student Intern: {first_name.strip()} {last_name.strip()} (Intern ID: #{new_intern_id}, Pref Mentor: #{preferred_mentor_id})",
                     "SELF_REGISTRATION"
                 ))
                 conn.commit()
                 return True, "Success: Registration completed! You can now sign in."
+            except Exception as e:
+                conn.rollback()
+                return False, str(e)
+            finally:
+                conn.close()
+
+    def set_intern_preferred_mentor(self, intern_id: int, mentor_id: int, student_name: str = "Student") -> Tuple[bool, str]:
+        """Allows an applicant intern to select or update their preferred faculty mentor."""
+        if self.active_engine == "mysql":
+            conn = self.get_mysql_connection()
+            try:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE interns SET mentor_id = %s WHERE intern_id = %s AND status = 'APPLIED'", (mentor_id, intern_id))
+                cursor.execute("""
+                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
+                    VALUES ('MENTOR_PREFERENCE_SELECTED', 'interns', %s, NULL, 
+                            CONCAT('Requested Faculty Mentor #', %s), %s)
+                """, (intern_id, mentor_id, student_name))
+                conn.commit()
+                cursor.close()
+                return True, "Mentor preference successfully saved! Awaiting Admin verification."
+            except Exception as e:
+                conn.rollback()
+                return False, str(e)
+            finally:
+                conn.close()
+        else:
+            conn = self.get_sqlite_connection()
+            try:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE interns SET mentor_id = ? WHERE intern_id = ? AND status = 'APPLIED'", (mentor_id, intern_id))
+                cursor.execute("""
+                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, ("MENTOR_PREFERENCE_SELECTED", "interns", intern_id, None, f"Requested Faculty Mentor #{mentor_id}", student_name))
+                conn.commit()
+                return True, "Mentor preference successfully saved! Awaiting Admin verification."
+            except Exception as e:
+                conn.rollback()
+                return False, str(e)
+            finally:
+                conn.close()
+
+    def verify_and_allocate_intern(self, intern_id: int, mentor_id: int, base_stipend: float, admin_name: str = "Admin") -> Tuple[bool, str]:
+        """Approves a registered student (status APPLIED -> ACTIVE) and allocates a faculty mentor."""
+        if self.active_engine == "mysql":
+            conn = self.get_mysql_connection()
+            try:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    UPDATE interns 
+                    SET mentor_id = %s, base_stipend = %s, status = 'ACTIVE' 
+                    WHERE intern_id = %s
+                """, (mentor_id, base_stipend, intern_id))
+                cursor.execute("""
+                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
+                    VALUES ('INTERN_VERIFY', 'interns', %s, 'Status: APPLIED', 
+                            CONCAT('Status: ACTIVE, Mentor ID: #', %s, ', Stipend: ', %s), %s)
+                """, (intern_id, mentor_id, base_stipend, admin_name))
+                conn.commit()
+                cursor.close()
+                return True, f"Success: Intern #{intern_id} verified and allocated to Mentor #{mentor_id}!"
+            except Exception as e:
+                conn.rollback()
+                return False, str(e)
+            finally:
+                conn.close()
+        else:
+            conn = self.get_sqlite_connection()
+            try:
+                cursor = conn.cursor()
+                # Check mentor capacity
+                cursor.execute("SELECT max_interns, first_name || ' ' || last_name FROM mentors WHERE mentor_id = ?", (mentor_id,))
+                mrow = cursor.fetchone()
+                if not mrow:
+                    return False, "Error: Selected mentor not found."
+                max_allowed, m_name = mrow[0], mrow[1]
+                cursor.execute("SELECT COUNT(*) FROM interns WHERE mentor_id = ? AND status IN ('ACTIVE', 'ALLOCATED') AND intern_id != ?", (mentor_id, intern_id))
+                curr_active = cursor.fetchone()[0]
+                if curr_active >= max_allowed:
+                    return False, f"Capacity Exceeded: Mentor {m_name} has reached maximum active quota of {max_allowed} interns!"
+
+                cursor.execute("""
+                    UPDATE interns 
+                    SET mentor_id = ?, base_stipend = ?, status = 'ACTIVE' 
+                    WHERE intern_id = ?
+                """, (mentor_id, base_stipend, intern_id))
+                cursor.execute("""
+                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (
+                    "INTERN_VERIFY", "interns", intern_id, "Status: APPLIED",
+                    f"Status: ACTIVE, Mentor #{mentor_id} ({m_name}), Stipend: ₹{base_stipend:,.2f}",
+                    admin_name
+                ))
+                conn.commit()
+                return True, f"Success: Intern #{intern_id} verified and allocated to {m_name}!"
+            except Exception as e:
+                conn.rollback()
+                return False, str(e)
+            finally:
+                conn.close()
+
+    def reject_intern_application(self, intern_id: int, reason: str, admin_name: str = "Admin") -> Tuple[bool, str]:
+        """Rejects a student application and deactivates their user account."""
+        if self.active_engine == "mysql":
+            conn = self.get_mysql_connection()
+            try:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE interns SET status = 'TERMINATED' WHERE intern_id = %s", (intern_id,))
+                cursor.execute("UPDATE users SET is_active = FALSE WHERE role = 'INTERN' AND reference_id = %s", (intern_id,))
+                cursor.execute("""
+                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
+                    VALUES ('APPLICATION_REJECTED', 'interns', %s, 'Status: APPLIED', %s, %s)
+                """, (intern_id, f"Application rejected. Reason: {reason}", admin_name))
+                conn.commit()
+                cursor.close()
+                return True, f"Application for Intern #{intern_id} rejected and account deactivated."
+            except Exception as e:
+                conn.rollback()
+                return False, str(e)
+            finally:
+                conn.close()
+        else:
+            conn = self.get_sqlite_connection()
+            try:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE interns SET status = 'TERMINATED' WHERE intern_id = ?", (intern_id,))
+                cursor.execute("UPDATE users SET is_active = 0 WHERE role = 'INTERN' AND reference_id = ?", (intern_id,))
+                cursor.execute("""
+                    INSERT INTO audit_logs (action_type, table_name, record_id, old_value, new_value, changed_by)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (
+                    "APPLICATION_REJECTED", "interns", intern_id, "Status: APPLIED",
+                    f"Application rejected. Reason: {reason}", admin_name
+                ))
+                conn.commit()
+                return True, f"Application for Intern #{intern_id} rejected and account deactivated."
             except Exception as e:
                 conn.rollback()
                 return False, str(e)
