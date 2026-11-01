@@ -26,687 +26,50 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling — High-Trust Academic & Enterprise UI/UX Design System
+# Custom Styling
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-    :root {
-        --primary: #4F46E5;
-        --primary-hover: #4338CA;
-        --primary-light: #EEF2FF;
-        --accent-sky: #0EA5E9;
-        --success: #10B981;
-        --warning: #F59E0B;
-        --danger: #EF4444;
-        --purple: #8B5CF6;
-        --bg-canvas: #F8FAFC;
-        --bg-card: #FFFFFF;
-        --border-subtle: #E2E8F0;
-        --text-main: #0F172A;
-        --text-body: #334155;
-        --text-muted: #64748B;
+    .main-title {
+        font-size: 2.1rem;
+        font-weight: 700;
+        color: #1E3A8A;
+        margin-bottom: 0.2rem;
     }
-
-    /* Base Font & Unified Canvas Layout (Locked to high-trust synced palette) */
-    html, body, [class*="css"], [class*="st-"] {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-
-    .stApp {
-        background-color: #F8FAFC !important;
-        color: #0F172A !important;
-    }
-
-    header[data-testid="stHeader"] {
-        background: transparent !important;
-    }
-
-    /* Synchronized Clean Sidebar */
-    [data-testid="stSidebar"] {
-        background-color: #FFFFFF !important;
-        border-right: 1px solid #E2E8F0 !important;
-        box-shadow: 1px 0 3px rgba(0, 0, 0, 0.02) !important;
-    }
-    [data-testid="stSidebar"] h1, 
-    [data-testid="stSidebar"] h2, 
-    [data-testid="stSidebar"] h3, 
-    [data-testid="stSidebar"] h4, 
-    [data-testid="stSidebar"] p, 
-    [data-testid="stSidebar"] span, 
-    [data-testid="stSidebar"] label {
-        color: #1E293B !important;
-    }
-
-    .main .block-container {
-        padding-top: 1.5rem;
-        padding-bottom: 3.5rem;
-        max-width: 1320px;
-    }
-
-    /* Typography Hierarchy */
-    h1 {
-        font-size: 2.25rem !important;
-        font-weight: 700 !important;
-        color: #0F172A !important;
-        letter-spacing: -0.025em !important;
-    }
-    h2 {
-        font-size: 1.75rem !important;
-        font-weight: 600 !important;
-        color: #1E293B !important;
-        letter-spacing: -0.02em !important;
-    }
-    h3 {
-        font-size: 1.35rem !important;
-        font-weight: 600 !important;
-        color: #1E293B !important;
-    }
-    h4, h5 {
-        font-weight: 600 !important;
-        color: #334155 !important;
-    }
-    p, span, label {
-        font-size: 0.9375rem;
-        color: #334155;
-    }
-
-    /* Smooth Buttons & Elevation */
-    .stButton > button, button[kind="primary"], button[kind="secondary"] {
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        font-size: 0.9rem !important;
-        padding: 0.5rem 1rem !important;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        border: 1px solid transparent !important;
-    }
-    button[kind="primary"], .stButton > button[kind="primary"] {
-        background-color: #4F46E5 !important;
-        color: #FFFFFF !important;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
-    }
-    button[kind="primary"]:hover, .stButton > button[kind="primary"]:hover {
-        background-color: #4338CA !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
-    }
-    /* Secondary & Outline Buttons */
-    button[kind="secondary"], .stButton > button:not([kind="primary"]) {
-        background-color: #FFFFFF !important;
-        color: #1E293B !important;
-        border: 1px solid #CBD5E1 !important;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
-    }
-    button[kind="secondary"]:hover, .stButton > button:not([kind="primary"]):hover {
-        background-color: #F8FAFC !important;
-        border-color: #94A3B8 !important;
-        color: #4F46E5 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
-    }
-    .stButton > button:focus {
-        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2) !important;
-    }
-
-    /* Synchronized Form Fields & Inputs */
-    input, textarea, select {
-        color: #0F172A !important;
-        background-color: #FFFFFF !important;
-    }
-    div[data-baseweb="input"] > div, 
-    div[data-baseweb="select"] > div,
-    div[data-baseweb="textarea"] > div {
-        border-radius: 8px !important;
-        border: 1px solid #CBD5E1 !important;
-        background-color: #FFFFFF !important;
-        transition: all 0.15s ease-in-out !important;
-        color: #0F172A !important;
-    }
-    div[data-baseweb="input"] input,
-    div[data-baseweb="textarea"] textarea {
-        color: #0F172A !important;
-        background-color: transparent !important;
-    }
-    div[data-baseweb="input"] > div:focus-within, 
-    div[data-baseweb="select"] > div:focus-within,
-    div[data-baseweb="textarea"] > div:focus-within {
-        border-color: #4F46E5 !important;
-        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
-    }
-
-    /* Dropdown Menus & Popovers */
-    div[data-baseweb="popover"], div[data-baseweb="menu"], ul[role="listbox"] {
-        background-color: #FFFFFF !important;
-        color: #0F172A !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 8px !important;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
-    }
-    li[role="option"] {
-        color: #0F172A !important;
-        font-size: 0.9rem !important;
-        padding: 8px 12px !important;
-    }
-    li[role="option"]:hover, li[aria-selected="true"] {
-        background-color: #EEF2FF !important;
-        color: #4F46E5 !important;
-    }
-
-    /* Synchronized Clean Form Cards */
-    div[data-testid="stForm"] {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 12px !important;
-        padding: 24px !important;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
-    }
-
-    /* Synchronized Clean Expanders */
-    div[data-testid="stExpander"] {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 10px !important;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
-        margin-bottom: 12px !important;
-    }
-    div[data-testid="stExpander"] details {
-        background-color: #FFFFFF !important;
-    }
-    div[data-testid="stExpander"] summary {
-        color: #0F172A !important;
-        font-weight: 600 !important;
-    }
-    div[data-testid="stExpander"] summary:hover {
-        color: #4F46E5 !important;
-    }
-
-    /* Markdown Text & Code Styling */
-    .stMarkdown p, .stMarkdown li {
-        color: #334155 !important;
-        line-height: 1.6 !important;
-    }
-    .stMarkdown strong {
-        color: #0F172A !important;
-    }
-    code {
-        background: #EEF2FF !important;
-        color: #4338CA !important;
-        padding: 2px 6px !important;
-        border-radius: 4px !important;
-        font-size: 0.85em !important;
-        border: 1px solid #C7D2FE !important;
-    }
-    pre code {
-        border: none !important;
-    }
-
-    /* Alerts / Callouts */
-    div[data-testid="stAlert"] {
-        border-radius: 10px !important;
-        border: 1px solid #E2E8F0 !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
-    }
-
-    /* Synchronized Clean Metric Containers */
-    div[data-testid="metric-container"] {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 12px !important;
-        padding: 16px 20px !important;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
-    }
-    div[data-testid="stMetricValue"] {
-        color: #0F172A !important;
-        font-weight: 700 !important;
-    }
-    div[data-testid="stMetricLabel"] {
-        color: #64748B !important;
-        font-weight: 600 !important;
-        text-transform: uppercase !important;
-        font-size: 0.72rem !important;
-    }
-
-    /* Synchronized Clean Dataframes */
-    div[data-testid="stDataFrame"] {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 10px !important;
-        padding: 4px !important;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
-    }
-
-    /* Clean Pill-Style Route Tabs */
-    .stTabs {
-        background-color: transparent !important;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 10px !important;
-        padding: 6px 8px !important;
-        gap: 6px !important;
-        margin-bottom: 16px !important;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
-    }
-    .stTabs [data-baseweb="tab"] {
-        padding: 8px 16px !important;
-        font-weight: 600 !important;
-        font-size: 0.88rem !important;
-        color: #64748B !important;
-        border-radius: 8px !important;
-        background-color: transparent !important;
-        border: none !important;
-        transition: all 0.15s ease !important;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #4F46E5 !important;
-        background-color: #F1F5F9 !important;
-    }
-    .stTabs [aria-selected="true"] {
-        color: #4F46E5 !important;
-        background-color: #EEF2FF !important;
-        border: none !important;
-        box-shadow: 0 1px 2px rgba(79, 70, 229, 0.1) !important;
-    }
-
-    /* Hero Banner */
-    .hero-banner {
-        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
-        border-radius: 16px;
-        padding: 36px 36px;
-        color: #FFFFFF;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 24px;
-        flex-wrap: wrap;
-    }
-    .hero-content {
-        flex: 1 1 500px;
-    }
-    .hero-trust-badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 14px;
-    }
-    .trust-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 12px;
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #E0E7FF;
-        letter-spacing: 0.02em;
-    }
-    .hero-title {
-        font-size: 2.25rem !important;
-        font-weight: 700 !important;
-        color: #FFFFFF !important;
-        line-height: 1.25 !important;
-        margin-bottom: 10px !important;
-    }
-    .hero-gradient-text {
-        background: linear-gradient(90deg, #38BDF8 0%, #818CF8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    .hero-subtitle {
+    .sub-title {
         font-size: 0.95rem;
-        color: #C7D2FE;
-        line-height: 1.55;
-        max-width: 620px;
-        margin: 0;
-    }
-    .hero-glass-preview {
-        flex: 0 1 360px;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(12px);
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        padding: 18px 20px;
-        box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.2);
-        color: #0F172A;
-    }
-    .glass-header {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-bottom: 14px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #E2E8F0;
-    }
-    .glass-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-    }
-    .glass-dot.red { background: #EF4444; }
-    .glass-dot.yellow { background: #F59E0B; }
-    .glass-dot.green { background: #10B981; }
-    .glass-title {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #475569;
-        margin-left: 4px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    .glass-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-    .glass-stat {
-        background: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 8px;
-        padding: 10px 12px;
-    }
-    .glass-val {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #4F46E5;
-        display: block;
-    }
-    .glass-lbl {
-        font-size: 0.72rem;
-        font-weight: 600;
         color: #64748B;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
+        margin-bottom: 1.2rem;
     }
-
-    /* Top Sticky Navbar */
-    .top-navbar {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 12px 20px;
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-    .navbar-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .navbar-logo {
-        font-size: 1.5rem;
-    }
-    .navbar-brand {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #0F172A;
-        letter-spacing: -0.02em;
-    }
-    .navbar-chip {
-        background: #EEF2FF;
-        color: #4F46E5;
-        border: 1px solid #C7D2FE;
-        font-size: 0.72rem;
-        font-weight: 600;
-        padding: 2px 8px;
+    .role-badge {
+        display: inline-block;
+        padding: 4px 12px;
         border-radius: 9999px;
-    }
-    .navbar-center {
-        display: flex;
-        gap: 8px;
-    }
-    .nav-pill {
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: #64748B;
-        padding: 6px 14px;
-        border-radius: 9999px;
-        background: transparent;
-        transition: all 0.15s ease;
-    }
-    .nav-pill.active {
-        background: #EEF2FF;
-        color: #4F46E5;
-        font-weight: 600;
-    }
-    .navbar-right {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    .user-avatar-pill {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 9999px;
-        padding: 4px 14px 4px 6px;
-    }
-    .avatar-circle {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: #4F46E5;
-        color: #FFFFFF;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
         font-size: 0.8rem;
-    }
-    .avatar-info {
-        display: flex;
-        flex-direction: column;
-    }
-    .avatar-name {
-        font-size: 0.82rem;
         font-weight: 600;
-        color: #0F172A;
-        line-height: 1.2;
+        margin-bottom: 8px;
     }
-
-    /* KPI / Stat Cards */
-    .kpi-card {
-        background: #FFFFFF;
+    .badge-admin { background-color: #FEE2E2; color: #991B1B; }
+    .badge-mentor { background-color: #E0E7FF; color: #3730A3; }
+    .badge-intern { background-color: #D1FAE5; color: #065F46; }
+    .badge-evaluator { background-color: #FEF3C7; color: #92400E; }
+    
+    .login-card {
+        background: #ffffff;
         border: 1px solid #E2E8F0;
         border-radius: 12px;
-        padding: 18px 20px;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-        transition: all 0.2s ease;
+        padding: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
     }
-    .kpi-card:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
-        border-color: #CBD5E1;
-    }
-    .kpi-top {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 8px;
-    }
-    .kpi-icon-box {
-        width: 42px;
-        height: 42px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-        flex-shrink: 0;
-    }
-    .kpi-lbl {
-        font-size: 0.72rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #64748B;
-    }
-    .kpi-val {
-        font-size: 1.75rem;
-        font-weight: 700;
+    .login-card h3 {
+        margin-top: 0;
         color: #0F172A;
-        line-height: 1.2;
-    }
-
-    /* Status Badges */
-    .role-badge, .status-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 4px 10px;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-    }
-    .badge-admin { background-color: #F3E8FF; color: #6B21A8; border: 1px solid #E9D5FF; }
-    .badge-mentor { background-color: #EEF2FF; color: #3730A3; border: 1px solid #C7D2FE; }
-    .badge-intern { background-color: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; }
-    .badge-evaluator { background-color: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
-    .badge-active { background-color: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; }
-    .badge-pending { background-color: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
-    .badge-danger { background-color: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
-
-    /* Modern Clean Container Cards */
-    .content-card {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 22px 24px;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-        margin-bottom: 16px;
-    }
-
-    /* Demo Login Pills Card */
-    .demo-pill-card {
-        border: 2px dashed #C7D2FE;
-        background: #FFFFFF;
-        border-radius: 12px;
-        padding: 18px 20px;
-        margin-top: 18px;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
-    }
-    .demo-tag {
-        display: inline-block;
-        background: #EEF2FF;
-        color: #4F46E5;
-        border: 1px solid #C7D2FE;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        margin-bottom: 4px;
-    }
-    .demo-title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin-bottom: 4px;
-    }
-    .demo-desc {
-        font-size: 0.8rem;
-        color: #64748B;
-        margin-bottom: 12px;
-    }
-
-    /* Search & Multi-Filter Bar */
-    .filter-bar-container {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        padding: 16px 20px;
-        margin-bottom: 16px;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
     }
 </style>
 """, unsafe_allow_html=True)
-
-# -----------------------------------------------------------------------------
-# Reusable UI Helpers (KPI Cards & Top Navbar)
-# -----------------------------------------------------------------------------
-def render_kpi_card(title: str, value: str, delta: str = "", icon: str = "📊", scheme: str = "indigo"):
-    bg_colors = {
-        "indigo": ("#EEF2FF", "#4F46E5"),
-        "sky": ("#E0F2FE", "#0284C7"),
-        "emerald": ("#DCFCE7", "#10B981"),
-        "amber": ("#FEF3C7", "#D97706"),
-        "purple": ("#F3E8FF", "#8B5CF6"),
-        "crimson": ("#FEE2E2", "#EF4444"),
-    }
-    bg_icon, icon_color = bg_colors.get(scheme, ("#EEF2FF", "#4F46E5"))
-    delta_html = f'<div style="font-size: 0.8rem; font-weight: 500; color: #64748B; margin-top: 2px;">{delta}</div>' if delta else ""
-    
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-top">
-            <div class="kpi-icon-box" style="background-color: {bg_icon}; color: {icon_color};">
-                {icon}
-            </div>
-            <div class="kpi-lbl">{title}</div>
-        </div>
-        <div class="kpi-val">{value}</div>
-        {delta_html}
-    </div>
-    """, unsafe_allow_html=True)
-
-def render_top_navbar(role: str, profile: dict):
-    role_badges = {
-        "admin": ('badge-admin', '👑 HR / Administrator'),
-        "mentor": ('badge-mentor', '👨‍🏫 Faculty Mentor'),
-        "intern": ('badge-intern', '🎓 Student Intern'),
-        "evaluator": ('badge-evaluator', '🔍 Academic Evaluator')
-    }
-    b_class, b_label = role_badges.get(role, ('badge-admin', role.capitalize()))
-    name = profile.get("name", "User")
-    parts = name.split()
-    initials = (parts[0][0] + (parts[-1][0] if len(parts) > 1 else "")) if parts else "IH"
-    initials = initials.upper()
-
-    col_nav, col_btn = st.columns([5.5, 1])
-    with col_nav:
-        st.markdown(f"""
-        <div class="top-navbar">
-            <div class="navbar-left">
-                <span class="navbar-logo">🎓</span>
-                <span class="navbar-brand">InternHub</span>
-                <span class="navbar-chip">SVNIT Surat</span>
-            </div>
-            <div class="navbar-center">
-                <span class="nav-pill active">Dashboard Overview</span>
-                <span class="nav-pill">Milestone Tasks</span>
-                <span class="nav-pill">Relational Logic</span>
-            </div>
-            <div class="navbar-right">
-                <div class="user-avatar-pill">
-                    <div class="avatar-circle">{initials}</div>
-                    <div class="avatar-info">
-                        <span class="avatar-name">{name}</span>
-                        <span class="role-badge {b_class}">{b_label}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col_btn:
-        st.write("")
-        if st.button("🚪 Sign Out", key="top_sign_out_btn", use_container_width=True):
-            logout()
 
 # -----------------------------------------------------------------------------
 # Database Manager Initialization
@@ -837,51 +200,8 @@ with st.sidebar:
 # SCREEN 1: LOGIN / ROLE SELECTOR (If not authenticated)
 # =============================================================================
 if not st.session_state.authenticated:
-    # 1. Hero Banner Component Pattern
-    st.markdown("""
-    <div class="hero-banner">
-        <div class="hero-content">
-            <div class="hero-trust-badges">
-                <span class="trust-badge">🏛️ SVNIT Surat</span>
-                <span class="trust-badge">⚡ CS203 DBMS Project</span>
-                <span class="trust-badge">🛡️ Role-Based Access Control</span>
-                <span class="trust-badge">🔒 SHA-256 Verified Auth</span>
-            </div>
-            <h1 class="hero-title">
-                Unified Internship & <span class="hero-gradient-text">Mentorship Management</span>
-            </h1>
-            <p class="hero-subtitle">
-                A high-trust enterprise database platform orchestrating student onboarding, mentor quotas, tamper-proof attendance, and automated cursor-driven payroll for academic engineering departments.
-            </p>
-        </div>
-        <div class="hero-glass-preview">
-            <div class="glass-header">
-                <span class="glass-dot red"></span>
-                <span class="glass-dot yellow"></span>
-                <span class="glass-dot green"></span>
-                <span class="glass-title">Database Engine Status: Online</span>
-            </div>
-            <div class="glass-stats-grid">
-                <div class="glass-stat">
-                    <span class="glass-val">9 Tables</span>
-                    <span class="glass-lbl">BCNF Relational</span>
-                </div>
-                <div class="glass-stat">
-                    <span class="glass-val">4 Portals</span>
-                    <span class="glass-lbl">PoLP Isolation</span>
-                </div>
-                <div class="glass-stat">
-                    <span class="glass-val">100%</span>
-                    <span class="glass-lbl">Tamper-Proof Time</span>
-                </div>
-                <div class="glass-stat">
-                    <span class="glass-val">Cursor</span>
-                    <span class="glass-lbl">Batch Payroll</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="main-title">🎓 InternHub: Internship Management System</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">SVNIT Surat • CS203 Database Management Systems Project • Team: <b>sandpaper</b></div>', unsafe_allow_html=True)
 
     col_login, col_info = st.columns([1.1, 1.4], gap="large")
 
@@ -923,33 +243,28 @@ if not st.session_state.authenticated:
                         else:
                             st.error("Invalid credentials or account inactive. Please check your email and password.")
 
-            # Demo Login Pills (Pattern: Dashed-border highlight card with one-click buttons)
-            st.markdown("""
-            <div class="demo-pill-card">
-                <span class="demo-tag">⚡ DEMO & VIVA EVALUATION</span>
-                <div class="demo-title">One-Click Quick Sign-In Pills</div>
-                <div class="demo-desc">Select any role to automatically fill verified institutional credentials:</div>
-            </div>
-            """, unsafe_allow_html=True)
-            t_col1, t_col2 = st.columns(2)
-            with t_col1:
-                if st.button("👑 HR Admin", key="demo_admin", use_container_width=True):
-                    st.session_state.fill_email = "admin@svnit.ac.in"
-                    st.session_state.fill_password = "admin123"
-                    st.rerun()
-                if st.button("👨‍🏫 Mentor (Dr. Rajesh)", key="demo_mentor", use_container_width=True):
-                    st.session_state.fill_email = "rajesh.sharma@svnit.ac.in"
-                    st.session_state.fill_password = "password123"
-                    st.rerun()
-            with t_col2:
-                if st.button("🎓 Intern (Aarav Shah)", key="demo_intern", use_container_width=True):
-                    st.session_state.fill_email = "aarav.shah@example.com"
-                    st.session_state.fill_password = "password123"
-                    st.rerun()
-                if st.button("🔍 Academic Evaluator", key="demo_eval", use_container_width=True):
-                    st.session_state.fill_email = "evaluator@svnit.ac.in"
-                    st.session_state.fill_password = "admin123"
-                    st.rerun()
+            # Quick Test Credentials Helper
+            with st.expander("📋 Quick-Fill Test Accounts for Demo / Viva Evaluation", expanded=True):
+                st.caption("Click any account to automatically fill the login form with seed credentials:")
+                t_col1, t_col2 = st.columns(2)
+                with t_col1:
+                    if st.button("👑 HR Admin", key="demo_admin", use_container_width=True):
+                        st.session_state.fill_email = "admin@svnit.ac.in"
+                        st.session_state.fill_password = "admin123"
+                        st.rerun()
+                    if st.button("👨‍🏫 Mentor (Dr. Rajesh)", key="demo_mentor", use_container_width=True):
+                        st.session_state.fill_email = "rajesh.sharma@svnit.ac.in"
+                        st.session_state.fill_password = "password123"
+                        st.rerun()
+                with t_col2:
+                    if st.button("🎓 Intern (Aarav Shah)", key="demo_intern", use_container_width=True):
+                        st.session_state.fill_email = "aarav.shah@example.com"
+                        st.session_state.fill_password = "password123"
+                        st.rerun()
+                    if st.button("🔍 Lab Evaluator", key="demo_eval", use_container_width=True):
+                        st.session_state.fill_email = "evaluator@svnit.ac.in"
+                        st.session_state.fill_password = "admin123"
+                        st.rerun()
 
         with tab_register:
             st.markdown("##### 📝 Student Intern Account Registration")
@@ -1015,43 +330,32 @@ if not st.session_state.authenticated:
                             st.error(f"Registration Failed: {msg}")
 
     with col_info:
+        st.markdown("### 🚀 Welcome to InternHub")
+        st.markdown(
+            "A modern, unified portal connecting students, faculty mentors, "
+            "and campus administration for end-to-end internship and project management."
+        )
+
+        st.markdown("#### 🎓 What You Can Do as a Student Intern")
         st.markdown("""
-        <div class="content-card" style="margin-bottom: 14px;">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                <span style="background: #E0F2FE; color: #0284C7; width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.15rem; font-weight: bold;">🎓</span>
-                <span style="font-weight: 700; color: #0F172A; font-size: 1.05rem;">For Enrolled Student Interns</span>
-            </div>
-            <div style="font-size: 0.88rem; color: #475569; line-height: 1.6;">
-                • <b>Interactive Mentor Selection:</b> Explore available research supervisors, inspect live slot availability, and submit preferences.<br>
-                • <b>Daily Attendance Check-In:</b> Single-click check-in for today's hours protected by database tampering triggers.<br>
-                • <b>Milestone Submissions & Stipends:</b> Upload project links and view itemized monthly disbursement slips.
-            </div>
-        </div>
+        - **Daily Attendance Check-in:** Log your daily working hours with secure date validation.
+        - **Milestones & Deliverables:** View assigned tasks, track deadlines, and submit your project links.
+        - **Stipend Slips:** Access itemized monthly payment slips with attendance records and performance bonuses.
+        """)
 
-        <div class="content-card" style="margin-bottom: 14px;">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                <span style="background: #EEF2FF; color: #4F46E5; width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.15rem; font-weight: bold;">👨‍🏫</span>
-                <span style="font-weight: 700; color: #0F172A; font-size: 1.05rem;">For Faculty Project Mentors</span>
-            </div>
-            <div style="font-size: 0.88rem; color: #475569; line-height: 1.6;">
-                • <b>Research Supervision:</b> Row-level isolation displaying only interns under your research guidance.<br>
-                • <b>Deliverable Grading:</b> Score project submissions with trigger checks (0–100 scale).<br>
-                • <b>Weekly Reviews & Overrides:</b> Submit structured feedback and make supervisor attendance adjustments with audit logs.
-            </div>
-        </div>
+        st.markdown("#### 👨‍🏫 What You Can Do as a Faculty Mentor")
+        st.markdown("""
+        - **Student Guidance:** Monitor and mentor active interns assigned to your research domain.
+        - **Task Evaluation:** Review submitted project deliverables and grade student milestone progress.
+        - **Weekly Reviews:** Provide structured technical and professional feedback to guide students.
+        """)
 
-        <div class="content-card" style="margin-bottom: 14px;">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                <span style="background: #F3E8FF; color: #8B5CF6; width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.15rem; font-weight: bold;">👑</span>
-                <span style="font-weight: 700; color: #0F172A; font-size: 1.05rem;">For Campus Administration & Incubation</span>
-            </div>
-            <div style="font-size: 0.88rem; color: #475569; line-height: 1.6;">
-                • <b>Institutional Analytics:</b> Departmental metrics, budget tracking, and real-time mentor quota monitoring.<br>
-                • <b>Verification & Allocation:</b> Review student applications with student-preferred mentors pre-selected.<br>
-                • <b>Automated Payroll:</b> Execute cursor batch payroll computation and inspect immutable system audit logs.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("#### 👑 Campus Administration & Incubation Cell")
+        st.markdown("""
+        - **Department Oversight:** Live departmental metrics, mentor workload, and student distribution.
+        - **Automated Payroll:** Calculate and disburse monthly stipends with automated audit logs.
+        - **Smooth Onboarding:** Process new applications and allocate student mentors efficiently.
+        """)
 
         with st.expander("ℹ️ SVNIT CS203 DBMS Project & Architecture Notes (For Evaluators)"):
             st.markdown("""
@@ -1076,8 +380,9 @@ else:
     role = st.session_state.user_role
     profile = st.session_state.user_profile
 
-    # Top Sticky Navbar Component Pattern
-    render_top_navbar(role, profile)
+    # Header with identity
+    st.markdown(f'<div class="main-title">🎓 InternHub — {profile.get("name")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="sub-title">{profile.get("detail", "")} • Active Role: <b>{role.upper()}</b></div>', unsafe_allow_html=True)
 
     # -------------------------------------------------------------------------
     # VIEW TYPE 1: ADMIN / HR PORTAL
@@ -1105,14 +410,10 @@ else:
             total_m = len(df_mentors) if not df_mentors.empty else 0
             total_payout = df_stipends['net_amount'].sum() if not df_stipends.empty and 'net_amount' in df_stipends.columns else 0.0
 
-            with m1:
-                render_kpi_card("Enrolled Interns", str(total_i), f"{active_i} Active Students", icon="👥", scheme="indigo")
-            with m2:
-                render_kpi_card("Faculty Mentors", str(total_m), "Across 5 Departments", icon="👨‍🏫", scheme="sky")
-            with m3:
-                render_kpi_card("Project Deliverables", str(len(df_tasks) if not df_tasks.empty else 0), "Tracked Milestones", icon="📋", scheme="purple")
-            with m4:
-                render_kpi_card("Disbursed Stipends", f"₹ {total_payout:,.0f}", "Cursor Computed", icon="💰", scheme="emerald")
+            m1.metric("Enrolled Interns", total_i, f"{active_i} Active")
+            m2.metric("Faculty Mentors", total_m, "All Departments")
+            m3.metric("Project Deliverables", len(df_tasks) if not df_tasks.empty else 0, "Tracked Milestones")
+            m4.metric("Disbursed Stipends", f"₹ {total_payout:,.2f}", "Calculated via Cursor")
 
             st.markdown("---")
             col_d1, col_d2 = st.columns(2)
@@ -1126,41 +427,7 @@ else:
                     st.dataframe(df_mentors[['mentor_name', 'dept_name', 'current_active_interns', 'max_capacity', 'capacity_status']], use_container_width=True)
 
             st.markdown("##### Master Intern Relational View (`vw_intern_master_summary`)")
-            
-            # Embedded Search & Multi-Filter Bar Pattern
-            st.markdown('<div class="filter-bar-container">', unsafe_allow_html=True)
-            fc1, fc2, fc3, fc4 = st.columns([1.8, 1.2, 1.2, 0.8])
-            with fc1:
-                adm_sq = st.text_input("🔍 Search Interns", placeholder="Filter by name or email...", key="adm_srch")
-            with fc2:
-                all_depts = ["All Departments"] + (sorted(df_interns['dept_name'].dropna().unique().tolist()) if not df_interns.empty and 'dept_name' in df_interns.columns else [])
-                adm_dept = st.selectbox("Department Filter", all_depts, key="adm_d_flt")
-            with fc3:
-                adm_stat = st.selectbox("Status Filter", ["All Statuses", "ACTIVE", "APPLIED", "COMPLETED", "TERMINATED"], key="adm_st_flt")
-            with fc4:
-                st.write("")
-                st.write("")
-                if st.button("Clear ✕", key="adm_clr_btn", use_container_width=True):
-                    st.session_state.adm_srch = ""
-                    st.session_state.adm_d_flt = "All Departments"
-                    st.session_state.adm_st_flt = "All Statuses"
-                    st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-
-            df_admin_view = df_interns.copy()
-            if not df_admin_view.empty:
-                if adm_sq.strip():
-                    q = adm_sq.strip().lower()
-                    df_admin_view = df_admin_view[
-                        df_admin_view['intern_name'].str.lower().str.contains(q, na=False) |
-                        df_admin_view['intern_email'].str.lower().str.contains(q, na=False)
-                    ]
-                if adm_dept != "All Departments":
-                    df_admin_view = df_admin_view[df_admin_view['dept_name'] == adm_dept]
-                if adm_stat != "All Statuses":
-                    df_admin_view = df_admin_view[df_admin_view['status'] == adm_stat]
-
-            st.dataframe(df_admin_view, use_container_width=True)
+            st.dataframe(df_interns, use_container_width=True)
 
         with tab_admin2:
             st.markdown("#### 📋 Verify Student Registrations & Onboard Interns")
@@ -1379,23 +646,6 @@ else:
         with tab_m1:
             st.markdown(f"#### Active Interns Under Your Mentorship")
             df_my_interns = run_db_query("SELECT * FROM vw_intern_master_summary WHERE mentor_name LIKE ? OR intern_id IN (SELECT intern_id FROM interns WHERE mentor_id = ?)", (f"%{profile['name'].split()[-1]}%", m_id), fallback_func=mock_data.get_mock_interns)
-            
-            # Mentor KPI Stat Cards Component Pattern
-            km1, km2, km3, km4 = st.columns(4)
-            active_cnt = len(df_my_interns[df_my_interns['status'] == 'ACTIVE']) if not df_my_interns.empty and 'status' in df_my_interns.columns else 0
-            tasks_cnt = int(df_my_interns['total_tasks'].sum()) if not df_my_interns.empty and 'total_tasks' in df_my_interns.columns else 0
-            appr_cnt = int(df_my_interns['approved_tasks'].sum()) if not df_my_interns.empty and 'approved_tasks' in df_my_interns.columns else 0
-            
-            with km1:
-                render_kpi_card("Active Interns", str(active_cnt), "Supervised Students", icon="🎓", scheme="indigo")
-            with km2:
-                render_kpi_card("Total Tasks", str(tasks_cnt), "Project Milestones", icon="📋", scheme="sky")
-            with km3:
-                render_kpi_card("Approved Submissions", str(appr_cnt), "Graded Deliverables", icon="✅", scheme="emerald")
-            with km4:
-                render_kpi_card("Supervision Capacity", f"{active_cnt}/3", "Slots Utilized", icon="🟢", scheme="amber")
-
-            st.markdown("---")
             st.dataframe(df_my_interns, use_container_width=True)
 
         with tab_m2:
@@ -1545,14 +795,10 @@ else:
                     st.error("❌ **Application Inactive / Rejected:** Please contact the incubation office for details.")
 
                 c1, c2, c3, c4 = st.columns(4)
-                with c1:
-                    render_kpi_card("Enrollment Status", status_val, "Enrolled" if status_val == "ACTIVE" else "Pending Review", icon="📌", scheme="emerald" if status_val == "ACTIVE" else "amber")
-                with c2:
-                    render_kpi_card("Faculty Mentor", pref_mentor, "Assigned Supervisor" if status_val == "ACTIVE" else "Preference", icon="👨‍🏫", scheme="sky")
-                with c3:
-                    render_kpi_card("Monthly Base Stipend", f"₹ {float(me.get('base_stipend', 0)):,.0f}", "Base Compensation", icon="💵", scheme="indigo")
-                with c4:
-                    render_kpi_card("Performance Score", f"{float(me.get('composite_performance_score', 90.0)):.1f}%", "Weighted Formula", icon="🏆", scheme="purple")
+                c1.metric("Status", status_val, "Enrolled" if status_val == "ACTIVE" else "Pending Review")
+                c2.metric("Faculty Mentor", pref_mentor, "Assigned" if status_val == "ACTIVE" else "Preference")
+                c3.metric("Base Stipend", f"₹ {float(me.get('base_stipend', 0)):,.2f}")
+                c4.metric("Performance Score", f"{float(me.get('composite_performance_score', 90.0)):.1f}%", "Weighted Formula")
                 
                 st.markdown("---")
                 st.write(f"**Department:** {me.get('dept_name', 'Computer Science & Engineering')}")
@@ -1584,7 +830,7 @@ else:
                                 is_current_pick = f"<span style='background: #FEF3C7; color: #92400E; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;'>YOUR CURRENT PICK</span>" if pref_mentor == rm['mentor_name'] else ""
 
                                 st.markdown(f"""
-                                <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);">
+                                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
                                     <div style="display: flex; justify-content: space-between; align-items: center;">
                                         <div style="font-weight: 700; color: #0F172A; font-size: 0.95rem;">👨‍🏫 {rm['mentor_name']}</div>
                                         {is_current_pick}
@@ -1668,6 +914,7 @@ else:
                                 st.rerun()
                             except Exception as ex:
                                 st.error(f"Database Validation Error: {ex}")
+                            st.error(f"Database Validation Error: {ex}")
 
             st.markdown("---")
             st.markdown("##### 📜 My Verified Attendance History (Read-Only)")
