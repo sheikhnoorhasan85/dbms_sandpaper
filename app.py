@@ -48,9 +48,34 @@ st.markdown("""
         --text-muted: #64748B;
     }
 
-    /* Base Font & Canvas Layout */
+    /* Base Font & Unified Canvas Layout (Locked to high-trust synced palette) */
     html, body, [class*="css"], [class*="st-"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .stApp {
+        background-color: #F8FAFC !important;
+        color: #0F172A !important;
+    }
+
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+    }
+
+    /* Synchronized Clean Sidebar */
+    [data-testid="stSidebar"] {
+        background-color: #FFFFFF !important;
+        border-right: 1px solid #E2E8F0 !important;
+        box-shadow: 1px 0 3px rgba(0, 0, 0, 0.02) !important;
+    }
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3, 
+    [data-testid="stSidebar"] h4, 
+    [data-testid="stSidebar"] p, 
+    [data-testid="stSidebar"] span, 
+    [data-testid="stSidebar"] label {
+        color: #1E293B !important;
     }
 
     .main .block-container {
@@ -105,45 +130,183 @@ st.markdown("""
         transform: translateY(-1px) !important;
         box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
     }
+    /* Secondary & Outline Buttons */
+    button[kind="secondary"], .stButton > button:not([kind="primary"]) {
+        background-color: #FFFFFF !important;
+        color: #1E293B !important;
+        border: 1px solid #CBD5E1 !important;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
+    }
+    button[kind="secondary"]:hover, .stButton > button:not([kind="primary"]):hover {
+        background-color: #F8FAFC !important;
+        border-color: #94A3B8 !important;
+        color: #4F46E5 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+    }
     .stButton > button:focus {
         box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2) !important;
     }
 
-    /* Structured Form Fields with Primary Focus Rings */
-    div[data-baseweb="input"] > div, div[data-baseweb="select"] > div {
+    /* Synchronized Form Fields & Inputs */
+    input, textarea, select {
+        color: #0F172A !important;
+        background-color: #FFFFFF !important;
+    }
+    div[data-baseweb="input"] > div, 
+    div[data-baseweb="select"] > div,
+    div[data-baseweb="textarea"] > div {
         border-radius: 8px !important;
-        border: 1px solid #E2E8F0 !important;
+        border: 1px solid #CBD5E1 !important;
         background-color: #FFFFFF !important;
         transition: all 0.15s ease-in-out !important;
+        color: #0F172A !important;
     }
-    div[data-baseweb="input"] > div:focus-within, div[data-baseweb="select"] > div:focus-within {
+    div[data-baseweb="input"] input,
+    div[data-baseweb="textarea"] textarea {
+        color: #0F172A !important;
+        background-color: transparent !important;
+    }
+    div[data-baseweb="input"] > div:focus-within, 
+    div[data-baseweb="select"] > div:focus-within,
+    div[data-baseweb="textarea"] > div:focus-within {
         border-color: #4F46E5 !important;
         box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
     }
 
-    /* Route Tabs */
+    /* Dropdown Menus & Popovers */
+    div[data-baseweb="popover"], div[data-baseweb="menu"], ul[role="listbox"] {
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    }
+    li[role="option"] {
+        color: #0F172A !important;
+        font-size: 0.9rem !important;
+        padding: 8px 12px !important;
+    }
+    li[role="option"]:hover, li[aria-selected="true"] {
+        background-color: #EEF2FF !important;
+        color: #4F46E5 !important;
+    }
+
+    /* Synchronized Clean Form Cards */
+    div[data-testid="stForm"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 12px !important;
+        padding: 24px !important;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+    }
+
+    /* Synchronized Clean Expanders */
+    div[data-testid="stExpander"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
+        margin-bottom: 12px !important;
+    }
+    div[data-testid="stExpander"] details {
+        background-color: #FFFFFF !important;
+    }
+    div[data-testid="stExpander"] summary {
+        color: #0F172A !important;
+        font-weight: 600 !important;
+    }
+    div[data-testid="stExpander"] summary:hover {
+        color: #4F46E5 !important;
+    }
+
+    /* Markdown Text & Code Styling */
+    .stMarkdown p, .stMarkdown li {
+        color: #334155 !important;
+        line-height: 1.6 !important;
+    }
+    .stMarkdown strong {
+        color: #0F172A !important;
+    }
+    code {
+        background: #EEF2FF !important;
+        color: #4338CA !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        font-size: 0.85em !important;
+        border: 1px solid #C7D2FE !important;
+    }
+    pre code {
+        border: none !important;
+    }
+
+    /* Alerts / Callouts */
+    div[data-testid="stAlert"] {
+        border-radius: 10px !important;
+        border: 1px solid #E2E8F0 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    }
+
+    /* Synchronized Clean Metric Containers */
+    div[data-testid="metric-container"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 12px !important;
+        padding: 16px 20px !important;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+    }
+    div[data-testid="stMetricValue"] {
+        color: #0F172A !important;
+        font-weight: 700 !important;
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #64748B !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        font-size: 0.72rem !important;
+    }
+
+    /* Synchronized Clean Dataframes */
+    div[data-testid="stDataFrame"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 10px !important;
+        padding: 4px !important;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
+    }
+
+    /* Clean Pill-Style Route Tabs */
+    .stTabs {
+        background-color: transparent !important;
+    }
     .stTabs [data-baseweb="tab-list"] {
-        border-bottom: 1px solid #E2E8F0 !important;
-        gap: 8px !important;
-        padding-bottom: 2px !important;
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 10px !important;
+        padding: 6px 8px !important;
+        gap: 6px !important;
+        margin-bottom: 16px !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
     }
     .stTabs [data-baseweb="tab"] {
         padding: 8px 16px !important;
-        font-weight: 500 !important;
-        font-size: 0.92rem !important;
+        font-weight: 600 !important;
+        font-size: 0.88rem !important;
         color: #64748B !important;
-        border-radius: 6px 6px 0 0 !important;
+        border-radius: 8px !important;
+        background-color: transparent !important;
         border: none !important;
         transition: all 0.15s ease !important;
     }
     .stTabs [data-baseweb="tab"]:hover {
         color: #4F46E5 !important;
-        background-color: #F8FAFC !important;
+        background-color: #F1F5F9 !important;
     }
     .stTabs [aria-selected="true"] {
         color: #4F46E5 !important;
-        font-weight: 600 !important;
-        border-bottom: 2px solid #4F46E5 !important;
+        background-color: #EEF2FF !important;
+        border: none !important;
+        box-shadow: 0 1px 2px rgba(79, 70, 229, 0.1) !important;
     }
 
     /* Hero Banner */
@@ -432,10 +595,11 @@ st.markdown("""
     /* Demo Login Pills Card */
     .demo-pill-card {
         border: 2px dashed #C7D2FE;
-        background: #F8FAFC;
+        background: #FFFFFF;
         border-radius: 12px;
-        padding: 16px 18px;
+        padding: 18px 20px;
         margin-top: 18px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
     }
     .demo-tag {
         display: inline-block;
@@ -463,11 +627,12 @@ st.markdown("""
 
     /* Search & Multi-Filter Bar */
     .filter-bar-container {
-        background: #F8FAFC;
+        background: #FFFFFF;
         border: 1px solid #E2E8F0;
         border-radius: 10px;
-        padding: 14px 18px;
+        padding: 16px 20px;
         margin-bottom: 16px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -1419,7 +1584,7 @@ else:
                                 is_current_pick = f"<span style='background: #FEF3C7; color: #92400E; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;'>YOUR CURRENT PICK</span>" if pref_mentor == rm['mentor_name'] else ""
 
                                 st.markdown(f"""
-                                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);">
                                     <div style="display: flex; justify-content: space-between; align-items: center;">
                                         <div style="font-weight: 700; color: #0F172A; font-size: 0.95rem;">👨‍🏫 {rm['mentor_name']}</div>
                                         {is_current_pick}
@@ -1503,7 +1668,6 @@ else:
                                 st.rerun()
                             except Exception as ex:
                                 st.error(f"Database Validation Error: {ex}")
-                            st.error(f"Database Validation Error: {ex}")
 
             st.markdown("---")
             st.markdown("##### 📜 My Verified Attendance History (Read-Only)")
